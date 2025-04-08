@@ -1,0 +1,20 @@
+# virtual environment
+backend/venv/
+
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# VSCode-specific files (inside backend/)
+backend/.vscode
+
+# macOS system files
+backend/.DS_Store
+
+# Django-specific files
+*.log
+*.sqlite3
+*.db
+*.pot
+*.pyc
