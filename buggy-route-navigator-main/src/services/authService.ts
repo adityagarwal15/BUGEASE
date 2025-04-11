@@ -24,27 +24,28 @@ export interface UserProfile {
 // Authentication service functions
 export const authService = {
   // Login user and get token
-  login: async (credentials: LoginCredentials): Promise<{token: string, userType: 'student' | 'driver'}> => {
+  login: async (credentials: LoginCredentials): Promise<{ token: string, userType: 'student' | 'driver' }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify(credentials)
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
-      
+
       // Store token and user type in localStorage
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userType', data.user_type); // Store user type
-      
+
       return {
         token: data.token,
         userType: data.user_type
@@ -54,29 +55,30 @@ export const authService = {
       throw error;
     }
   },
-  
+
   // Register new user (students only)
-  register: async (credentials: RegisterCredentials): Promise<{token: string, userType: 'student'}> => {
+  register: async (credentials: RegisterCredentials): Promise<{ token: string, userType: 'student' }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify(credentials)
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
       }
-      
+
       // Store token and user type in localStorage
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userType', 'student'); // Students only for registration
-      
+
       return {
         token: data.token,
         userType: 'student' // Students only for registration
@@ -86,23 +88,24 @@ export const authService = {
       throw error;
     }
   },
-  
+
   // Logout user
   logout: async (): Promise<void> => {
     const token = localStorage.getItem('authToken');
-    
+
     if (!token) {
       return;
     }
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/user/logout/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${token}`
+          'Authorization': `Token ${token}`,
+          'ngrok-skip-browser-warning': 'true',
         }
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Logout failed');
@@ -116,41 +119,42 @@ export const authService = {
       localStorage.removeItem('userType');
     }
   },
-  
+
   // Get user profile
   getProfile: async (): Promise<UserProfile> => {
     const token = localStorage.getItem('authToken');
-    
+
     if (!token) {
       throw new Error('No authentication token found');
     }
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/user/profile/`, {
         method: 'GET',
         headers: {
-          'Authorization': `Token ${token}`
+          'Authorization': `Token ${token}`,
+          'ngrok-skip-browser-warning': 'true',
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch profile');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Profile fetch error:', error);
       throw error;
     }
   },
-  
+
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
     return localStorage.getItem('authToken') !== null;
   },
-  
+
   // Get authentication token
   getToken: (): string | null => {
     return localStorage.getItem('authToken');
@@ -179,7 +183,7 @@ export const authService = {
 // Custom hook for authentication
 export const useAuth = () => {
   const { toast } = useToast();
-  
+
   const handleAuthError = (error: any) => {
     toast({
       title: "Authentication Error",
@@ -187,7 +191,7 @@ export const useAuth = () => {
       variant: "destructive"
     });
   };
-  
+
   return {
     login: async (credentials: LoginCredentials) => {
       try {

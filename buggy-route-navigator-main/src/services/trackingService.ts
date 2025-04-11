@@ -33,7 +33,8 @@ const getAuthHeaders = (): Headers => {
 
   const headers = new Headers({
     'Content-Type': 'application/json',
-    'Authorization': `Token ${token}`
+    'Authorization': `Token ${token}`,
+    'ngrok-skip-browser-warning': 'true',
   });
 
   return headers;
