@@ -30,12 +30,12 @@ const getAuthHeaders = (): Headers => {
   if (!token) {
     throw new Error('No authentication token found');
   }
-  
+
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Authorization': `Token ${token}`
   });
-  
+
   return headers;
 };
 
@@ -49,19 +49,19 @@ export const trackingService = {
         method: 'GET',
         headers
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to fetch available buggies');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching available buggies:', error);
       throw error;
     }
   },
-  
+
   // Get live locations of all buggies
   getLiveLocations: async (): Promise<BuggyLocation[]> => {
     try {
@@ -70,14 +70,14 @@ export const trackingService = {
         method: 'GET',
         headers
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to fetch live locations');
       }
-      
+
       const locations = await response.json();
-      
+
       // Add a derived status field for frontend display
       return locations.map((location: BuggyLocation) => ({
         ...location,
@@ -89,34 +89,34 @@ export const trackingService = {
       throw error;
     }
   },
-  
+
   // Get location history for a specific buggy
   getLocationHistory: async (buggyId: number, since = '1h'): Promise<LocationHistory[]> => {
     try {
       const headers = getAuthHeaders();
       const response = await fetch(
-        `${API_BASE_URL}/tracking/location-history/?buggy_id=${buggyId}&since=${since}`, 
+        `${API_BASE_URL}/tracking/location-history/?buggy_id=${buggyId}&since=${since}`,
         { method: 'GET', headers }
       );
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to fetch location history');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching location history:', error);
       throw error;
     }
   },
-  
+
   // Update buggy running status
   updateBuggyStatus: async (buggyId: number, isRunning: boolean): Promise<Buggy> => {
     try {
       const headers = getAuthHeaders();
       // Using available-buggies endpoint to update status as per the API docs
-      const response = await fetch(`${API_BASE_URL}/tracking/available-buggies/`, {
+      const response = await fetch(`${API_BASE_URL}/tracking/update-buggy-status/`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -124,19 +124,19 @@ export const trackingService = {
           is_running: isRunning
         })
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to update buggy status');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error updating buggy status:', error);
       throw error;
     }
   },
-  
+
   // Get assigned buggy for a driver
   getAssignedBuggy: async (): Promise<Buggy | null> => {
     try {
@@ -145,7 +145,7 @@ export const trackingService = {
         method: 'GET',
         headers
       });
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           // No buggy assigned
@@ -154,7 +154,7 @@ export const trackingService = {
         const data = await response.json();
         throw new Error(data.error || 'Failed to fetch assigned buggy');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching assigned buggy:', error);
