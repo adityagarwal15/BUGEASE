@@ -93,3 +93,85 @@ class AvailableBuggiesView(APIView):
         running_buggies = Buggy.objects.filter(is_running=True)
         serializer = BuggySerializer(running_buggies, many=True)
         return Response(serializer.data)
+
+class AssignedBuggyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Get the buggy assigned to the authenticated driver",
+        responses={
+            200: BuggySerializer,
+            403: openapi.Response(description="Only drivers can access assigned buggies"),
+            404: openapi.Response(description="No buggy is currently assigned")
+        }
+    )
+    
+    def get(self, request):
+        # Check if the user is a driver
+        if request.user.user_type != 'driver':
+            return Response(
+                {"detail": "Only drivers can access assigned buggies"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            # Get the buggy assigned to this driver
+            buggy = Buggy.objects.get(assigned_driver=request.user)
+            serializer = BuggySerializer(buggy)
+            return Response(serializer.data)
+        except Buggy.DoesNotExist:
+            return Response(
+                {"detail": "No buggy is currently assigned to you"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class UpdateBuggyStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Update the is_running status of a driver's assigned buggy",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["is_running"],
+            properties={
+                "is_running": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="New status of the buggy"),
+            }
+        ),
+        responses={
+            200: openapi.Response(description="Status updated successfully"),
+            400: openapi.Response(description="Missing 'is_running' parameter"),
+            403: openapi.Response(description="Only drivers can update buggy status"),
+            404: openapi.Response(description="No buggy is currently assigned"),
+        }
+    )
+    
+    def post(self, request):
+        # Check if the user is a driver
+        if request.user.user_type != 'driver':
+            return Response(
+                {"detail": "Only drivers can update buggy status"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            # Get the buggy assigned to this driver
+            buggy = Buggy.objects.get(assigned_driver=request.user)
+            
+            # Update the status
+            is_running = request.data.get('is_running')
+            if is_running is not None:
+                buggy.is_running = is_running
+                buggy.save()
+                
+                return Response({"status": "success", "is_running": buggy.is_running})
+            else:
+                return Response(
+                    {"detail": "Missing 'is_running' parameter"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        except Buggy.DoesNotExist:
+            return Response(
+                {"detail": "No buggy is currently assigned to you"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
