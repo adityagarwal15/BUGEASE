@@ -6,10 +6,14 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Buggy, BuggyLocation, Location
 from .serializers import BuggyLocationSerializer, LocationHistorySerializer, BuggySerializer
 import datetime
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class LiveLocationView(APIView):
     permission_classes = [IsAuthenticated]
-    
+    @swagger_auto_schema(
+        responses={200: BuggyLocationSerializer(many=True)}
+    ) 
     def get(self, request):
         # Get all currently running buggies
         running_locations = BuggyLocation.objects.filter(
@@ -23,6 +27,19 @@ class LiveLocationView(APIView):
 
 class LocationHistoryView(APIView):
     permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'buggy_id', openapi.IN_QUERY,
+                description="ID of the buggy", type=openapi.TYPE_INTEGER, required=True
+            ),
+            openapi.Parameter(
+                'since', openapi.IN_QUERY,
+                description="Time range (e.g., 1h, 30m, 1d)", type=openapi.TYPE_STRING, required=False
+            ),
+        ],
+        responses={200: LocationHistorySerializer(many=True)}
+    )
     
     def get(self, request):
         buggy_id = request.query_params.get('buggy_id')
@@ -67,6 +84,9 @@ class LocationHistoryView(APIView):
 
 class AvailableBuggiesView(APIView):
     permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(
+        responses={200: BuggySerializer(many=True)}
+    )
     
     def get(self, request):
         # Get all running buggies
