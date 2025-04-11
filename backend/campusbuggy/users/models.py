@@ -7,6 +7,8 @@ class User(AbstractUser):
         ('driver', 'Driver'),
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
+    first_name = models.CharField(max_length=150, blank=False, null=False)
+    last_name = models.CharField(max_length=150, blank=False, null=False)
 
     def __str__(self):
         return f"{self.username} ({self.user_type})"
