@@ -22,14 +22,14 @@ const DriverDashboard = () => {
   const [buggy, setBuggy] = useState<BuggyDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
-  
+
   // Get user profile and assigned buggy
   useEffect(() => {
     const fetchProfileAndBuggy = async () => {
       try {
         const userProfile = await getProfile();
         setProfile(userProfile);
-        
+
         // Fetch assigned buggy from the API
         try {
           const assignedBuggy = await trackingService.getAssignedBuggy();
@@ -59,40 +59,40 @@ const DriverDashboard = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProfileAndBuggy();
-  }, [getProfile, toast]);
-  
+  }, []);
+
   // Setup location tracking via custom hook
   useDriverLocation(buggy, isRunning);
-  
+
   const handleStatusToggle = async (checked: boolean) => {
     if (!buggy) return;
-    
+
     try {
       // Update local state immediately for responsiveness
       setIsRunning(checked);
-      
+
       // Update buggy status on the server
       const updatedBuggy = await trackingService.updateBuggyStatus(buggy.id, checked);
-      
+
       // Update local state with server response
       setBuggy(updatedBuggy);
       setIsRunning(updatedBuggy.is_running);
-      
+
       toast({
         title: checked ? "Started Service" : "Ended Service",
-        description: checked 
-          ? "Your location is now being broadcast to students" 
+        description: checked
+          ? "Your location is now being broadcast to students"
           : "Your location is no longer being broadcast",
         variant: checked ? "default" : "destructive"
       });
     } catch (error) {
       console.error("Error updating buggy status:", error);
-      
+
       // Revert the UI state change if server update fails
       setIsRunning(!checked);
-      
+
       toast({
         title: "Update Failed",
         description: "Could not update your buggy status. Please try again.",
@@ -100,7 +100,7 @@ const DriverDashboard = () => {
       });
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
@@ -114,27 +114,27 @@ const DriverDashboard = () => {
             </p>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left column - Profile and status */}
           <div className="lg:col-span-4 space-y-6">
-            <DriverProfileCard 
-              profile={profile} 
-              loading={loading} 
+            <DriverProfileCard
+              profile={profile}
+              loading={loading}
             />
-            
-            <BuggyStatusCard 
+
+            <BuggyStatusCard
               buggy={buggy}
               isRunning={isRunning}
               loading={loading}
               onStatusToggle={handleStatusToggle}
             />
           </div>
-          
+
           {/* Right column - Quick actions and guides */}
           <div className="lg:col-span-8 space-y-6">
             <CampusMapCard isRunning={isRunning} />
-            
+
             {/* Quick Actions and Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <QuickLinksCard />
