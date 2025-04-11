@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'tracking',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
 ]
 
 ROOT_URLCONF = "campusbuggy.urls"
@@ -147,3 +150,12 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8080",
+# ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # ONLY for development, not production!
+
+# Optional for cookies/auth:
+CORS_ALLOW_CREDENTIALS = True
