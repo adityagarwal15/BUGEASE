@@ -39,12 +39,32 @@ class LocationConsumer(AsyncWebsocketConsumer):
                 self.group_name,
                 self.channel_name
             )
-            
+                
         if hasattr(self, 'student_group'):
             await self.channel_layer.group_discard(
                 self.student_group,
                 self.channel_name
             )
+        
+        # Clear the buggy location when a driver disconnects
+        if hasattr(self, 'user') and self.user.is_authenticated and self.user.user_type == 'driver':
+            await self.clear_driver_buggy_location()
+
+    @database_sync_to_async
+    def clear_driver_buggy_location(self):
+        from .models import Buggy, BuggyLocation
+        
+        try:
+            # Find any buggies assigned to this driver
+            buggies = Buggy.objects.filter(assigned_driver=self.user)
+            
+            # Delete the BuggyLocation records for these buggies
+            BuggyLocation.objects.filter(buggy__in=buggies).delete()
+            
+            return True
+        except Exception as e:
+            print(f"Error clearing buggy location: {e}")
+            return False
     
     async def receive(self, text_data):
         data = json.loads(text_data)
