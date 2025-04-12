@@ -34,27 +34,10 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 
-### 4. Run Migrations
+### 4. Navigate into the Django Project Directory
 
 ```bash
-python manage.py migrate
-```
-
-### 5. Create a Superuser (for admin access)
-
-```bash
-python manage.py createsuperuser
-```
-
-> Suggested credentials for local use:  
-> **Username:** `admin`  
-> **Password:** `admin`  
-> (Email can be left blank)
-
-### 6. Run the ASGI Server with Daphne
-
-```bash
-daphne -b 127.0.0.1 -p 8000 campusbuggy.asgi:application
+cd campusbuggy
 ```
 
 ---
@@ -73,6 +56,31 @@ daphne -b 127.0.0.1 -p 8000 campusbuggy.asgi:application
 - The `staticfiles/` folder is **auto-generated** and **gitignored**, so it won’t appear in version control.
 
 - You don’t need to modify or commit this folder manually — just make sure `collectstatic` is run locally.
+
+---
+
+### 5. Run Migrations
+
+```bash
+python manage.py migrate
+```
+
+### 6. Create a Superuser (for admin access)
+
+```bash
+python manage.py createsuperuser
+```
+
+> Suggested credentials for local use:  
+> **Username:** `admin`  
+> **Password:** `admin`  
+> (Email can be left blank)
+
+### 7. Run the ASGI Server with Daphne
+
+```bash
+daphne -b 127.0.0.1 -p 8000 campusbuggy.asgi:application
+```
 
 ---
 
