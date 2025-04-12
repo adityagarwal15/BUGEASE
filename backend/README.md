@@ -6,9 +6,10 @@ This is the backend for the CampusBuggy project, built using Django, Django REST
 
 ## 🔧 Requirements
 
-- Python 3.11.7
-- `virtualenv` (recommended)
-- Git
+- Python 3.11.7  
+- `virtualenv` (recommended)  
+- Git  
+- **Redis (required for WebSockets)**
 
 ---
 
@@ -42,6 +43,122 @@ cd campusbuggy
 
 ---
 
+## 📦 Redis Setup (Required for WebSockets)
+
+Django Channels uses Redis as a channel layer for managing WebSocket communication.
+
+### 🧠 Why Redis?
+
+WebSockets need a **channel layer backend** for real-time message delivery. Redis is the recommended and production-grade option used here.
+
+---
+
+### 💻 Redis Installation Instructions
+
+#### 🖥 macOS
+
+Install via Homebrew:
+
+```bash
+brew install redis
+brew services start redis
+```
+
+Verify Redis is running:
+
+```bash
+redis-cli ping
+# Should return: PONG
+```
+
+---
+
+#### 🪟 Windows
+
+Redis doesn't officially support Windows. Use one of the following:
+
+##### Option 1: Docker
+
+```bash
+docker run -p 6379:6379 redis
+```
+
+Then test:
+
+```bash
+docker exec -it <container_id> redis-cli ping
+# Should return: PONG
+```
+
+##### Option 2: WSL (Windows Subsystem for Linux)
+
+Inside WSL terminal:
+
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo service redis-server start
+```
+
+Test:
+
+```bash
+redis-cli ping
+# Should return: PONG
+```
+
+---
+
+#### 🐧 Linux (Ubuntu/Debian)
+
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo systemctl enable redis
+sudo systemctl start redis
+```
+
+Verify it's running:
+
+```bash
+redis-cli ping
+# Should return: PONG
+```
+
+---
+
+### 🔧 Configuration (Optional)
+
+If using a remote Redis instance (e.g., Railway or Upstash), update `settings.py`:
+
+```python
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("your-redis-host", 6379)],
+        },
+    },
+}
+```
+
+Or load from `.env`:
+
+```python
+import os
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(os.environ.get("REDIS_URL", "127.0.0.1"), 6379)],
+        },
+    },
+}
+```
+
+---
+
 ## 📂 Notes on Static Files
 
 - Static files are handled using **WhiteNoise**.
@@ -59,13 +176,15 @@ cd campusbuggy
 
 ---
 
-### 5. Run Migrations
+### 🗂 Run Migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 6. Create a Superuser (for admin access)
+---
+
+### 👤 Create a Superuser (for admin access)
 
 ```bash
 python manage.py createsuperuser
@@ -76,7 +195,9 @@ python manage.py createsuperuser
 > **Password:** `admin`  
 > (Email can be left blank)
 
-### 7. Run the ASGI Server with Daphne
+---
+
+### ⚙️ Run the ASGI Server with Daphne
 
 ```bash
 daphne -b 127.0.0.1 -p 8000 campusbuggy.asgi:application
@@ -96,8 +217,8 @@ Once Daphne is running on `127.0.0.1:8000`, you can access:
 ## 🛠 Development Notes
 
 - Database: Using **SQLite** for development (auto-generated locally after migrations).
-- This backend is meant to be run alongside a frontend locally.
-- All settings are development-friendly. Do not use this setup for production.
+- Redis is **required** to enable real-time WebSocket functionality.
+- Do not use this setup as-is for production.
 
 ---
 
