@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'tracking',
+    'booking',
     'corsheaders',
     'drf_yasg',
 ]
