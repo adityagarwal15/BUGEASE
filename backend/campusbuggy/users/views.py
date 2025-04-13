@@ -25,7 +25,18 @@ class RegisterStudentView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_201_CREATED)
+            response = Response({"token": token.key}, status=status.HTTP_201_CREATED)
+            
+            # Set token in secure cookie
+            response.set_cookie(
+                'auth_token',
+                token.key,
+                httponly=True,
+                secure=request.is_secure(),  # True in HTTPS environments
+                samesite='Lax'
+            )
+            
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -48,7 +59,18 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key, "user_type": user.user_type}, status=status.HTTP_200_OK)
+            response = Response({"token": token.key, "user_type": user.user_type},status=status.HTTP_200_OK)
+            
+            # Set token in secure cookie
+            response.set_cookie(
+                'auth_token',
+                token.key,
+                httponly=True,
+                secure=request.is_secure(),  # True in HTTPS environments
+                samesite='Lax'
+            )
+            
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -59,7 +81,9 @@ class LogoutView(APIView):
     )
     def post(self, request):
         request.user.auth_token.delete()  # Token deletion = logout
-        return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+        response = Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+        response.delete_cookie('auth_token')
+        return response
 
 
 class UserProfileView(APIView):

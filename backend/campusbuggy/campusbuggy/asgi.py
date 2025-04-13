@@ -14,13 +14,16 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'campusbuggy.settings')
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 import tracking.routing
-from tracking.consumers import TokenAuthMiddlewareStack
+from tracking.consumers import TokenAuthMiddleware
+from channels.security.websocket import AllowedHostsOriginValidator
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": TokenAuthMiddlewareStack(
-        URLRouter(
-            tracking.routing.websocket_urlpatterns
+    "websocket": AllowedHostsOriginValidator(
+        TokenAuthMiddleware(
+            URLRouter(
+                tracking.routing.websocket_urlpatterns
+            )
         )
     ),
 })

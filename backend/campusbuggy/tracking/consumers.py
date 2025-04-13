@@ -162,22 +162,56 @@ class LocationConsumer(AsyncWebsocketConsumer):
 
 
 # ------------------ Token Auth Middleware ------------------
-
 class TokenAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
-        query_string = scope.get('query_string', b'').decode()
-        query_params = parse_qs(query_string)
-        token = query_params.get('token', [None])[0]
+        # Try to get auth from cookies first
+        user = await self.get_user_from_cookie(scope)
         
-        if token:
-            user = await self.get_user(token)
-            if user:
-                scope['user'] = user
+        # Fallback to query param authentication (can be removed after full migration)
+        if not user or not user.is_authenticated:
+            query_string = scope.get('query_string', b'').decode()
+            query_params = parse_qs(query_string)
+            token = query_params.get('token', [None])[0]
+            if token:
+                user = await self.get_user(token)
+        
+        if user:
+            scope['user'] = user
         
         return await self.inner(scope, receive, send)
+    
+    @database_sync_to_async
+    def get_user_from_cookie(self, scope):
+        from rest_framework.authtoken.models import Token
+        from django.contrib.auth.models import AnonymousUser
+        
+        # Extract cookies from headers
+        headers = dict(scope.get('headers', []))
+        cookie_header = headers.get(b'cookie', b'').decode()
+        
+        # Parse cookies
+        cookies = {}
+        if cookie_header:
+            cookie_pairs = cookie_header.split('; ')
+            for pair in cookie_pairs:
+                if '=' in pair:
+                    key, value = pair.split('=', 1)
+                    cookies[key] = value
+        
+        # Get auth token from cookie
+        token_key = cookies.get('auth_token')
+        
+        if not token_key:
+            return AnonymousUser()
+            
+        try:
+            token = Token.objects.get(key=token_key)
+            return token.user
+        except Token.DoesNotExist:
+            return AnonymousUser()
     
     @database_sync_to_async
     def get_user(self, token_key):
@@ -189,7 +223,3 @@ class TokenAuthMiddleware:
             return token.user
         except Token.DoesNotExist:
             return AnonymousUser()
-
-def TokenAuthMiddlewareStack(inner):
-    from channels.auth import AuthMiddlewareStack
-    return TokenAuthMiddleware(AuthMiddlewareStack(inner))
