@@ -1,5 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.exceptions import DenyConnection
+from rest_framework.authtoken.models import Token
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from urllib.parse import parse_qs
@@ -167,27 +169,12 @@ class TokenAuthMiddleware:
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
-        # Try to get auth from cookies first
         user = await self.get_user_from_cookie(scope)
-        
-        # Fallback to query param authentication (can be removed after full migration)
-        if not user or not user.is_authenticated:
-            query_string = scope.get('query_string', b'').decode()
-            query_params = parse_qs(query_string)
-            token = query_params.get('token', [None])[0]
-            if token:
-                user = await self.get_user(token)
-        
-        if user:
-            scope['user'] = user
-        
+        scope['user'] = user 
         return await self.inner(scope, receive, send)
     
     @database_sync_to_async
     def get_user_from_cookie(self, scope):
-        from rest_framework.authtoken.models import Token
-        from django.contrib.auth.models import AnonymousUser
-        
         # Extract cookies from headers
         headers = dict(scope.get('headers', []))
         cookie_header = headers.get(b'cookie', b'').decode()
@@ -205,21 +192,10 @@ class TokenAuthMiddleware:
         token_key = cookies.get('auth_token')
         
         if not token_key:
-            return AnonymousUser()
+            raise DenyConnection("No auth token provided in cookies.")
             
         try:
             token = Token.objects.get(key=token_key)
             return token.user
         except Token.DoesNotExist:
-            return AnonymousUser()
-    
-    @database_sync_to_async
-    def get_user(self, token_key):
-        from rest_framework.authtoken.models import Token
-        from django.contrib.auth.models import AnonymousUser
-
-        try:
-            token = Token.objects.get(key=token_key)
-            return token.user
-        except Token.DoesNotExist:
-            return AnonymousUser()
+            raise DenyConnection("Invalid auth token.")
