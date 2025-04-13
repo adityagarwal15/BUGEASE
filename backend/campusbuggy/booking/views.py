@@ -7,9 +7,6 @@ from .models import CampusLocation
 from .serializers import CampusLocationNameSerializer, CampusLocationDetailSerializer
 
 class CampusLocationListView(generics.ListAPIView):
-    """
-    List all active campus locations with only their names.
-    """
     queryset = CampusLocation.objects.filter(is_active=True)
     serializer_class = CampusLocationNameSerializer
     permission_classes = [IsAuthenticated]
