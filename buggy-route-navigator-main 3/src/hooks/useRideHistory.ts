@@ -17,23 +17,18 @@ export const useRideHistory = () => {
   const [history, setHistory] = useState<RideHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getToken } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchRideHistory = async () => {
       try {
-        const token = getToken();
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-
+        // Using cookies for authentication (cookies are sent automatically with fetch)
         const response = await fetch(`${API_BASE_URL}/user/ride-history/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Token ${token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Important: includes cookies in the request
         });
 
         if (!response.ok) {
@@ -56,7 +51,7 @@ export const useRideHistory = () => {
     };
 
     fetchRideHistory();
-  }, [getToken, toast]);
+  }, [toast]);
 
   return { history, loading, error };
 };

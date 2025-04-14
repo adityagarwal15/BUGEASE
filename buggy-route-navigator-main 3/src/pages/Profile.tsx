@@ -3,15 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Calendar, Loader2 } from 'lucide-react';
+import { User, Mail, Phone } from 'lucide-react';
 import { UserProfile, useAuth } from '@/services/authService';
 import { useToast } from '@/components/ui/use-toast';
-import { API_BASE_URL } from '@/config';
 
 const Profile = () => {
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [joinDate, setJoinDate] = useState<string | null>(null);
   const { getProfile } = useAuth();
   const { toast } = useToast();
 
@@ -21,25 +19,6 @@ const Profile = () => {
         // Fetch user profile
         const profile = await getProfile();
         setUserData(profile);
-        
-        // Try to get joined date if available
-        try {
-          const token = localStorage.getItem('authToken');
-          const response = await fetch(`${API_BASE_URL}/user/get-doj`, {
-            headers: {
-              'Authorization': `Token ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            setJoinDate(data.joined_date);
-          }
-        } catch (error) {
-          console.error("Error fetching join date:", error);
-          // Set a fallback date if fetching fails
-          setJoinDate("April 2025");
-        }
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast({
@@ -54,26 +33,12 @@ const Profile = () => {
     
     fetchUserData();
   }, [getProfile, toast]);
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch (e) {
-      return dateString;
-    }
-  };
   
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
           <p className="mt-2">Loading profile...</p>
         </div>
       </div>
@@ -125,11 +90,11 @@ const Profile = () => {
               
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-primary" />
+                  <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Member Since</p>
-                  <p className="font-medium">{joinDate ? formatDate(joinDate) : 'Not available'}</p>
+                  <p className="text-sm text-muted-foreground">Phone Number</p>
+                  <p className="font-medium">{userData?.phone_number || 'Not available'}</p>
                 </div>
               </div>
             </div>

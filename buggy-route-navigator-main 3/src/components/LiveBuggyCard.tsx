@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { Truck, User, MapPin } from 'lucide-react';
+import { Truck, User, MapPin, Phone } from 'lucide-react';
 
 // Buggy interface
 interface Buggy {
@@ -16,6 +16,7 @@ interface Buggy {
   location?: { lat: number; lng: number };
   capacity: number;
   selected?: boolean;
+  driverPhone?: string; // Add optional driver phone number field
 }
 
 interface LiveBuggyCardProps {
@@ -70,6 +71,15 @@ const LiveBuggyCard: React.FC<LiveBuggyCardProps> = ({ buggy, onSelect, selected
               <span>Driver</span>
             </div>
             <span className="font-medium">{buggy.driverName}</span>
+          </div>
+          
+          {/* Add new phone field */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>Phone</span>
+            </div>
+            <span className="font-medium">{buggy.driverPhone || "Not available"}</span>
           </div>
           
           <div className="flex items-center justify-between">

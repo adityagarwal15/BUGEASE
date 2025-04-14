@@ -8,6 +8,7 @@ export interface Buggy {
   is_running: boolean;
 }
 
+// Add driverPhone to BuggyLocation interface if API were to return it
 export interface BuggyLocation {
   buggy_number: string;
   latitude: number;
@@ -16,6 +17,7 @@ export interface BuggyLocation {
   driver_name: string | null;
   last_updated: string;
   status?: string; // We'll derive this for frontend display
+  driver_phone?: string; // Note: This is not actually returned by the API based on docs
 }
 
 export interface LocationHistory {
@@ -24,30 +26,14 @@ export interface LocationHistory {
   timestamp: string;
 }
 
-// Helper function to get the authentication token
-const getAuthHeaders = (): Headers => {
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-  
-  const headers = new Headers({
-    'Content-Type': 'application/json',
-    'Authorization': `Token ${token}`
-  });
-  
-  return headers;
-};
-
 // Tracking service functions
 export const trackingService = {
   // Get all available buggies
   getAvailableBuggies: async (): Promise<Buggy[]> => {
     try {
-      const headers = getAuthHeaders();
       const response = await fetch(`${API_BASE_URL}/tracking/available-buggies/`, {
         method: 'GET',
-        headers
+        credentials: 'include' // Include cookies for authentication
       });
       
       if (!response.ok) {
@@ -65,10 +51,9 @@ export const trackingService = {
   // Get live locations of all buggies
   getLiveLocations: async (): Promise<BuggyLocation[]> => {
     try {
-      const headers = getAuthHeaders();
       const response = await fetch(`${API_BASE_URL}/tracking/live-location/`, {
         method: 'GET',
-        headers
+        credentials: 'include' // Include cookies for authentication
       });
       
       if (!response.ok) {
@@ -93,10 +78,12 @@ export const trackingService = {
   // Get location history for a specific buggy
   getLocationHistory: async (buggyId: number, since = '1h'): Promise<LocationHistory[]> => {
     try {
-      const headers = getAuthHeaders();
       const response = await fetch(
         `${API_BASE_URL}/tracking/location-history/?buggy_id=${buggyId}&since=${since}`, 
-        { method: 'GET', headers }
+        { 
+          method: 'GET', 
+          credentials: 'include' // Include cookies for authentication
+        }
       );
       
       if (!response.ok) {
@@ -111,17 +98,18 @@ export const trackingService = {
     }
   },
   
-  // Update buggy running status - FIXED ENDPOINT
+  // Update buggy running status
   updateBuggyStatus: async (buggyId: number, isRunning: boolean): Promise<Buggy> => {
     try {
-      const headers = getAuthHeaders();
-      // Using the correct endpoint as per the API docs
       const response = await fetch(`${API_BASE_URL}/tracking/update-buggy-status/`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           is_running: isRunning
-        })
+        }),
+        credentials: 'include' // Include cookies for authentication
       });
       
       if (!response.ok) {
@@ -139,10 +127,9 @@ export const trackingService = {
   // Get assigned buggy for a driver
   getAssignedBuggy: async (): Promise<Buggy | null> => {
     try {
-      const headers = getAuthHeaders();
       const response = await fetch(`${API_BASE_URL}/tracking/assigned-buggy/`, {
         method: 'GET',
-        headers
+        credentials: 'include' // Include cookies for authentication
       });
       
       if (!response.ok) {

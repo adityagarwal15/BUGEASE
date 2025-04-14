@@ -6,15 +6,16 @@ import { API_BASE_URL } from "@/config";
 export interface LoginCredentials {
   username: string;
   password: string;
-  userType?: 'student' | 'driver'; // Added user type for login
+  userType?: 'student' | 'driver';
 }
 
 export interface RegisterCredentials {
   username: string;
   email: string;
   password: string;
-  first_name: string; // Added first_name field
-  last_name: string;  // Added last_name field
+  first_name: string;
+  last_name: string;
+  phone_number: string; // Added phone_number field
 }
 
 export interface UserProfile {
@@ -22,8 +23,9 @@ export interface UserProfile {
   username: string;
   email: string;
   user_type: 'student' | 'driver';
-  first_name: string; // Added first_name field
-  last_name: string;  // Added last_name field
+  first_name: string;
+  last_name: string;
+  phone_number: string; // Added phone_number field
 }
 
 // Authentication service functions
@@ -36,7 +38,8 @@ export const authService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify(credentials),
+        credentials: 'include' // Include cookies
       });
       
       const data = await response.json();
@@ -45,10 +48,9 @@ export const authService = {
         throw new Error(data.error || 'Login failed');
       }
       
-      // Store token and user type in localStorage
-      localStorage.setItem('authToken', data.token);
+      // Store user type in localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userType', data.user_type); // Store user type
+      localStorage.setItem('userType', data.user_type);
       
       return {
         token: data.token,
@@ -68,7 +70,8 @@ export const authService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(credentials) // Now includes first_name and last_name
+        body: JSON.stringify(credentials), // Now includes phone_number
+        credentials: 'include' // Include cookies
       });
       
       const data = await response.json();
@@ -77,14 +80,13 @@ export const authService = {
         throw new Error(data.error || 'Registration failed');
       }
       
-      // Store token and user type in localStorage
-      localStorage.setItem('authToken', data.token);
+      // Store user type in localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userType', 'student'); // Students only for registration
+      localStorage.setItem('userType', 'student');
       
       return {
         token: data.token,
-        userType: 'student' // Students only for registration
+        userType: 'student'
       };
     } catch (error) {
       console.error('Registration error:', error);
@@ -94,18 +96,10 @@ export const authService = {
   
   // Logout user
   logout: async (): Promise<void> => {
-    const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      return;
-    }
-    
     try {
       const response = await fetch(`${API_BASE_URL}/user/logout/`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Token ${token}`
-        }
+        credentials: 'include' // Include cookies
       });
       
       if (!response.ok) {
@@ -115,8 +109,7 @@ export const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear local storage regardless of server response
-      localStorage.removeItem('authToken');
+      // Clear local storage
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userType');
     }
@@ -124,18 +117,10 @@ export const authService = {
   
   // Get user profile
   getProfile: async (): Promise<UserProfile> => {
-    const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-    
     try {
       const response = await fetch(`${API_BASE_URL}/user/profile/`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Token ${token}`
-        }
+        credentials: 'include' // Include cookies
       });
       
       const data = await response.json();
@@ -153,12 +138,7 @@ export const authService = {
   
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return localStorage.getItem('authToken') !== null;
-  },
-  
-  // Get authentication token
-  getToken: (): string | null => {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('isLoggedIn') === 'true';
   },
 
   // Get user type (student or driver)
@@ -227,7 +207,6 @@ export const useAuth = () => {
       }
     },
     isAuthenticated: authService.isAuthenticated,
-    getToken: authService.getToken,
     getUserType: authService.getUserType,
     isDriver: authService.isDriver,
     isStudent: authService.isStudent

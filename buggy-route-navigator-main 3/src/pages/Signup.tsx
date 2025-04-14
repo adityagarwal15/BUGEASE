@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { MapPin, Loader2, Eye, EyeOff } from 'lucide-react'; // Added Eye and EyeOff icons
+import { MapPin, Loader2, Eye, EyeOff, Phone } from 'lucide-react'; // Added Phone icon
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth, RegisterCredentials } from '@/services/authService';
 
@@ -13,6 +13,7 @@ const Signup = () => {
   const [formData, setFormData] = useState<RegisterCredentials & {
     firstName: string;
     lastName: string;
+    phoneNumber: string;
     confirmPassword: string;
     termsAccepted: boolean;
   }>({
@@ -21,15 +22,17 @@ const Signup = () => {
     password: '',
     firstName: '',
     lastName: '',
-    first_name: '', // Added to match backend field
-    last_name: '',  // Added to match backend field
+    phoneNumber: '',
+    first_name: '',
+    last_name: '',
+    phone_number: '',
     confirmPassword: '',
     termsAccepted: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Added for password visibility toggle
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Added for confirm password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +48,12 @@ const Signup = () => {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
+    }
+    
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = "Phone number must be 10 digits";
     }
     
     if (!formData.password) {
@@ -94,6 +103,7 @@ const Signup = () => {
           password: formData.password,
           first_name: formData.firstName, // Map firstName to first_name
           last_name: formData.lastName,   // Map lastName to last_name
+          phone_number: formData.phoneNumber // Map phoneNumber to phone_number
         });
         
         toast({
@@ -211,6 +221,27 @@ const Signup = () => {
                   disabled={isLoading}
                 />
                 {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="phoneNumber" className="text-sm font-medium flex items-center">
+                  <Phone className="h-4 w-4 mr-1" />
+                  Phone Number
+                </label>
+                <Input 
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  placeholder="Enter 10-digit phone number"
+                  className={`input-field ${errors.phoneNumber ? "border border-red-500" : ""}`}
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
+                  maxLength={10}
+                />
+                {errors.phoneNumber && <p className="text-red-500 text-xs">{errors.phoneNumber}</p>}
               </div>
               
               <div className="space-y-2">

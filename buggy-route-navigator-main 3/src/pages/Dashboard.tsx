@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import RideStatusCard from '@/components/RideStatusCard';
 import LiveBuggyCard from '@/components/LiveBuggyCard';
@@ -30,6 +29,7 @@ interface DashboardBuggy {
   lastUpdated: Date;
   lastLocation: string;
   capacity: number;
+  driverPhone?: string; // Add driver phone number field
 }
 
 const Dashboard = () => {
@@ -109,7 +109,8 @@ const Dashboard = () => {
       },
       lastUpdated: new Date(location.last_updated),
       lastLocation: "Campus Area",
-      capacity: 4 // Default capacity
+      capacity: 4, // Default capacity
+      driverPhone: location.driver_phone || undefined // Add driver phone if available from API
     };
   };
   
