@@ -6,6 +6,8 @@ from channels.db import database_sync_to_async
 from django.utils import timezone
 from urllib.parse import parse_qs
 from datetime import timedelta
+from django.conf import settings
+from users.utils.token_utils import token_expire_handler
 
 class LocationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -189,13 +191,19 @@ class TokenAuthMiddleware:
                     cookies[key] = value
         
         # Get auth token from cookie
-        token_key = cookies.get('auth_token')
+        token_key = cookies.get(settings.AUTH_COOKIE_NAME)
         
         if not token_key:
             raise DenyConnection("No auth token provided in cookies.")
             
         try:
             token = Token.objects.get(key=token_key)
+            
+            # Check if token has expired
+            is_expired, token = token_expire_handler(token)
+            if is_expired:
+                raise DenyConnection("Authentication token has expired. Please log in again.")
+                
             return token.user
         except Token.DoesNotExist:
             raise DenyConnection("Invalid auth token.")

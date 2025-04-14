@@ -170,9 +170,9 @@ CHANNEL_LAYERS = {
 
   This gathers all static assets into the `staticfiles/` directory for serving via WhiteNoise.
 
-- The `staticfiles/` folder is **auto-generated** and **gitignored**, so it won’t appear in version control.
+- The `staticfiles/` folder is **auto-generated** and **gitignored**, so it won't appear in version control.
 
-- You don’t need to modify or commit this folder manually — just make sure `collectstatic` is run locally.
+- You don't need to modify or commit this folder manually — just make sure `collectstatic` is run locally.
 
 ---
 
@@ -225,3 +225,78 @@ Once Daphne is running on `127.0.0.1:8000`, you can access:
 ## 📫 Contact
 
 If you run into issues setting this up locally, please ping me directly.
+
+---
+
+## 🔒 Authentication System
+
+This backend uses a secure cookie-based token authentication system. Here's what frontend developers need to know:
+
+### How Authentication Works
+
+1. **Token Storage**:
+   - Authentication tokens are stored in HTTP-only, secure cookies
+   - Tokens expire after 7 days by default
+   - The frontend should not attempt to directly access the auth token
+
+2. **CSRF Protection**:
+   - For any non-GET requests, you must include a CSRF token
+   - Get a CSRF token by calling `GET /api/user/csrf-token/`
+   - Include the token in the `X-CSRFToken` header for POST/PUT/PATCH/DELETE requests
+
+3. **Required Headers for Auth Endpoints**:
+   - `Content-Type: application/json` (for requests with a body)
+   - `X-CSRFToken: <csrf-token>` (for non-GET requests)
+   - Set `credentials: 'include'` in fetch options to include cookies
+
+### Authentication Flow
+
+1. **Registration**: `POST /api/user/register/`
+   - Creates a new user and sets the auth token cookie
+   - Returns user information and token value
+
+2. **Login**: `POST /api/user/login/`
+   - Authenticates user and sets the auth token cookie
+   - Returns user type and token value
+
+3. **Logout**: `POST /api/user/logout/`
+   - Invalidates the current token and clears the cookie
+
+4. **Token Refresh**: `POST /api/user/refresh-token/`
+   - Creates a new token and updates the cookie
+   - Should be called before token expiration (recommended ~6 days)
+
+5. **Profile**: `GET /api/user/profile/`
+   - Returns the user profile
+   - Requires authentication
+
+### Best Practices for Frontend
+
+1. Store minimal authentication state in localStorage:
+   - `isLoggedIn`: Boolean indicating login status
+   - `userType`: 'student' or 'driver'
+   - `lastAuthTime`: Timestamp when auth was last refreshed
+
+2. Validate authentication on app startup by calling profile endpoint
+
+3. Implement token refresh logic:
+   - Track token age using `lastAuthTime`
+   - Refresh token if it's close to expiration (e.g., after 6 days)
+
+4. Handle authentication errors:
+   - 401 Unauthorized: Clear localStorage and redirect to login
+   - Always include proper error handling for auth endpoints
+
+5. For secure operations:
+   - Always get a fresh CSRF token before making non-GET requests
+   - Include `credentials: 'include'` in all API requests
+
+### WebSocket Authentication
+
+WebSocket connections are authenticated using the same cookie-based token:
+
+1. The cookie must be valid when establishing the WebSocket connection
+2. If the token expires, the WebSocket connection will be closed
+3. No additional authentication is needed for WebSocket messages
+
+This consistent authentication approach ensures security while simplifying frontend implementation.

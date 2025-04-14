@@ -134,7 +134,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'users.authentication.TokenCookieAuthentication',  # Our custom cookie-based token auth
+        'rest_framework.authentication.TokenAuthentication',  # Keep as fallback for API tools
+        'rest_framework.authentication.SessionAuthentication',  # Add session auth as a backup
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -180,4 +182,23 @@ CSRF_TRUSTED_ORIGINS = [
     "https://7b34-45-112-146-74.ngrok-free.app",
     "http://localhost:8000",
 ]
+
+# Add token timeout settings - tokens will expire after 7 days
+TOKEN_EXPIRED_AFTER_DAYS = 7
+
+# Cookie settings
+AUTH_COOKIE_NAME = 'auth_token'
+AUTH_COOKIE_SECURE = True  # Set to False in development if not using HTTPS
+AUTH_COOKIE_HTTP_ONLY = True
+AUTH_COOKIE_SAMESITE = 'Lax'
+AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days in seconds
+
+# CSRF settings
+CSRF_COOKIE_SECURE = True  # Set to False in development if not using HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False so JS can access it
+CSRF_USE_SESSIONS = False  # Store CSRF token in cookie, not session
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Enforce CSRF checks for unsafe HTTP methods only (POST, PUT, PATCH, DELETE)
+CSRF_REQUIRE_SAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'] 
 

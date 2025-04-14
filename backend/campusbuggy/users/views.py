@@ -5,6 +5,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+from django.middleware.csrf import get_token
 
 from .models import User
 from .serializers import (
@@ -12,6 +15,18 @@ from .serializers import (
     LoginSerializer,
     UserProfileSerializer
 )
+from .utils.token_utils import get_or_create_token, set_auth_cookie, delete_auth_cookie
+
+
+class CSRFTokenView(APIView):
+    """View to get a CSRF token for forms that require it."""
+    permission_classes = [AllowAny]
+    
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        # Simply getting the token is enough to set the CSRF cookie
+        token = get_token(request)
+        return Response({"csrfToken": token})
 
 
 class RegisterStudentView(APIView):
@@ -24,17 +39,14 @@ class RegisterStudentView(APIView):
         serializer = StudentRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            token, _ = Token.objects.get_or_create(user=user)
-            response = Response({"token": token.key}, status=status.HTTP_201_CREATED)
+            token = get_or_create_token(user)
+            response = Response(
+                {"token": token.key, "user_type": user.user_type}, 
+                status=status.HTTP_201_CREATED
+            )
             
             # Set token in secure cookie
-            response.set_cookie(
-                'auth_token',
-                token.key,
-                httponly=True,
-                secure=request.is_secure(),  # True in HTTPS environments
-                samesite='Lax'
-            )
+            set_auth_cookie(response, token)
             
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -58,17 +70,14 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
-            token, _ = Token.objects.get_or_create(user=user)
-            response = Response({"token": token.key, "user_type": user.user_type},status=status.HTTP_200_OK)
+            token = get_or_create_token(user)
+            response = Response(
+                {"token": token.key, "user_type": user.user_type},
+                status=status.HTTP_200_OK
+            )
             
             # Set token in secure cookie
-            response.set_cookie(
-                'auth_token',
-                token.key,
-                httponly=True,
-                secure=request.is_secure(),  # True in HTTPS environments
-                samesite='Lax'
-            )
+            set_auth_cookie(response, token)
             
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -80,9 +89,11 @@ class LogoutView(APIView):
         responses={200: openapi.Response("Logged out")}
     )
     def post(self, request):
-        request.user.auth_token.delete()  # Token deletion = logout
+        if hasattr(request.user, 'auth_token'):
+            request.user.auth_token.delete()  # Token deletion = logout
+        
         response = Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
-        response.delete_cookie('auth_token')
+        delete_auth_cookie(response)
         return response
 
 
@@ -94,3 +105,34 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RefreshTokenView(APIView):
+    """View to refresh authentication token before it expires."""
+    permission_classes = [IsAuthenticated]
+    
+    @swagger_auto_schema(
+        responses={200: openapi.Response(
+            description="Token refresh successful",
+            examples={
+                "application/json": {
+                    "token": "newtoken1234"
+                }
+            }
+        )}
+    )
+    def post(self, request):
+        # Delete old token
+        old_token = None
+        if hasattr(request.user, 'auth_token'):
+            old_token = request.user.auth_token
+            old_token.delete()
+        
+        # Create new token
+        token = Token.objects.create(user=request.user)
+        response = Response({"token": token.key}, status=status.HTTP_200_OK)
+        
+        # Set new token in cookie
+        set_auth_cookie(response, token)
+        
+        return response
