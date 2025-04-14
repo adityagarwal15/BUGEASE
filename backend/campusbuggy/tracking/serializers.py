@@ -23,4 +23,4 @@ class LocationHistorySerializer(serializers.ModelSerializer):
 class BuggySerializer(serializers.ModelSerializer):
     class Meta:
         model = Buggy
-        fields = ['id', 'number_plate', 'is_running']
+        fields = ['id', 'number_plate', 'capacity', 'is_running']

@@ -40,7 +40,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/user/', include('users.urls')),
-    path('api/', include('tracking.urls')),
+    path('api/tracking/', include('tracking.urls')),
     path('api/booking/', include('booking.urls')),
     # Swagger UI and ReDoc
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
