@@ -9,6 +9,7 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
     first_name = models.CharField(max_length=150, blank=False, null=False)
     last_name = models.CharField(max_length=150, blank=False, null=False)
+    phone_number = models.CharField(max_length=10, blank=False, null=False, unique=True)
 
     def __str__(self):
         return f"{self.username} ({self.user_type})"
