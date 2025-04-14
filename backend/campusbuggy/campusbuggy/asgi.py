@@ -11,14 +11,20 @@ import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'campusbuggy.settings')
 
+# Initializing Django 
 from django.core.asgi import get_asgi_application
+django_asgi_app = get_asgi_application()
+
+# Other imports
 from channels.routing import ProtocolTypeRouter, URLRouter
-import tracking.routing
-from tracking.consumers import TokenAuthMiddleware
 from channels.security.websocket import AllowedHostsOriginValidator
 
+# Routing imports
+import tracking.routing
+from tracking.consumers import TokenAuthMiddleware
+
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
+    "http": django_asgi_app,
     "websocket": AllowedHostsOriginValidator(
         TokenAuthMiddleware(
             URLRouter(
