@@ -21,3 +21,6 @@ backend/.DS_Store
 
 # Don't commit collected static files
 backend/campusbuggy/staticfiles/
+
+# Node.js
+**/package-lock.json
