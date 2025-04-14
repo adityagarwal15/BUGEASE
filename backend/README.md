@@ -222,15 +222,59 @@ Once Daphne is running on `127.0.0.1:8000`, you can access:
 
 ---
 
-## 📫 Contact
+## 📦 Project Architecture
 
-If you run into issues setting this up locally, please ping me directly.
+### App Structure
+
+The project is organized into the following Django apps:
+
+1. **users**: User management, authentication, and profiles
+   - Custom User model
+   - Authentication endpoints
+   - User profile management
+
+2. **tracking**: Core buggy tracking functionality
+   - Buggy and location models
+   - Location tracking endpoints
+   - WebSocket consumers for real-time updates
+
+3. **booking**: Booking functionality (initial implementation)
+   - Campus location models
+   - (Future) Booking functionality
+
+4. **campusbuggy**: Main project configuration
+   - Settings
+   - URL routing
+   - ASGI configuration
+
+### Data Models
+
+#### Users App
+
+- **User**: Custom user model extending Django's AbstractUser
+  - Fields: username, email, first_name, last_name, phone_number, user_type (student/driver)
+
+#### Tracking App
+
+- **Buggy**: Represents campus buggies
+  - Fields: number_plate, capacity, assigned_driver, is_running
+
+- **BuggyLocation**: Represents current live location of a buggy
+  - Fields: buggy, latitude, longitude, direction, last_updated
+
+- **Location**: Historical location records for buggies
+  - Fields: buggy, driver, latitude, longitude, timestamp
+
+#### Booking App (Future Implementation)
+
+- **CampusLocation**: Represents locations on campus
+  - (To be implemented)
 
 ---
 
 ## 🔒 Authentication System
 
-This backend uses a secure cookie-based token authentication system. Here's what frontend developers need to know:
+This backend uses a secure cookie-based token authentication system. Here's what you need to know:
 
 ### How Authentication Works
 
@@ -291,12 +335,192 @@ This backend uses a secure cookie-based token authentication system. Here's what
    - Always get a fresh CSRF token before making non-GET requests
    - Include `credentials: 'include'` in all API requests
 
+---
+
+## 🌐 API Endpoints
+
+### User Management
+
+#### Registration and Authentication
+
+- **Register Student**: `POST /api/user/register/`
+  - Body: `{username, email, password, first_name, last_name, phone_number}`
+  - Returns: `{token, user_type}`
+
+- **Login**: `POST /api/user/login/`
+  - Body: `{username, password}`
+  - Returns: `{token, user_type}`
+
+- **Logout**: `POST /api/user/logout/`
+  - Requires: Authentication
+  - Returns: Success message
+
+- **Get CSRF Token**: `GET /api/user/csrf-token/`
+  - Returns: `{csrfToken}`
+
+- **Refresh Token**: `POST /api/user/refresh-token/`
+  - Requires: Authentication
+  - Returns: `{token}`
+
+#### User Profile
+
+- **Get Profile**: `GET /api/user/profile/`
+  - Requires: Authentication
+  - Returns: User profile information
+
+### Buggy Tracking
+
+#### Location Endpoints
+
+- **Live Location**: `GET /api/tracking/live-location/`
+  - Requires: Authentication
+  - Returns: List of all running buggies with their current locations
+
+- **Location History**: `GET /api/tracking/location-history/?buggy_id=<id>&since=<time>`
+  - Requires: Authentication
+  - Query Parameters:
+    - `buggy_id`: ID of the buggy
+    - `since`: Time range (e.g., "1h", "30m", "1d")
+  - Returns: Historical locations for the specified buggy
+
+#### Buggy Management
+
+- **Available Buggies**: `GET /api/tracking/available-buggies/`
+  - Requires: Authentication
+  - Returns: List of all currently running buggies
+
+- **Assigned Buggy**: `GET /api/tracking/assigned-buggy/`
+  - Requires: Authentication (driver only)
+  - Returns: Details of the buggy assigned to the authenticated driver
+
+- **Update Buggy Status**: `POST /api/tracking/update-buggy-status/`
+  - Requires: Authentication (driver only)
+  - Body: `{is_running: true/false}`
+  - Returns: Updated buggy status
+
+---
+
+## 📡 WebSocket API
+
+The application uses WebSockets for real-time location updates. The primary WebSocket endpoint is:
+
+### Location Updates
+
+- **Endpoint**: `ws://localhost:8000/ws/location/updates/`
+- **Authentication**: Uses the same cookie-based token authentication
+- **Connection**: Frontend must include credentials (cookies) when connecting
+
+#### Messages FROM Client TO Server:
+
+1. **Location Update** (driver only):
+   ```json
+   {
+     "type": "location_update",
+     "buggy_id": 1,
+     "latitude": 37.7749,
+     "longitude": -122.4194,
+     "direction": 45.0
+   }
+   ```
+
+2. **Subscribe to Buggies** (student only):
+   ```json
+   {
+     "type": "subscribe",
+     "buggy_ids": [1, 2, 3]
+   }
+   ```
+
+#### Messages FROM Server TO Client:
+
+1. **Location Update**:
+   ```json
+   {
+     "type": "location_update",
+     "buggy_id": 1,
+     "latitude": 37.7749,
+     "longitude": -122.4194,
+     "direction": 45.0,
+     "driver_name": "John",
+     "timestamp": "2023-04-15T12:34:56.789Z"
+   }
+   ```
+
+2. **Subscription Confirmation**:
+   ```json
+   {
+     "type": "subscription_confirmed",
+     "buggy_ids": [1, 2, 3]
+   }
+   ```
+
 ### WebSocket Authentication
 
-WebSocket connections are authenticated using the same cookie-based token:
+- WebSocket connections are authenticated using the same cookie-based token
+- The cookie must be valid when establishing the WebSocket connection
+- If the token expires, the WebSocket connection will be closed
+- No additional authentication is needed for WebSocket messages
 
-1. The cookie must be valid when establishing the WebSocket connection
-2. If the token expires, the WebSocket connection will be closed
-3. No additional authentication is needed for WebSocket messages
+---
 
-This consistent authentication approach ensures security while simplifying frontend implementation.
+## 🧠 Advanced Technical Details
+
+### Authentication Implementation
+
+- **Token Storage**: Django REST Framework's Token model in database
+- **Cookie Security**: HTTP-only, Secure, SameSite=Lax
+- **Token Expiration**: 7 days (configurable in settings)
+- **Custom Authentication**: TokenCookieAuthentication class extending DRF
+
+### WebSocket Implementation
+
+- **Channel Layer**: Redis-backed for scalability
+- **Consumer Types**: AsyncWebsocketConsumer for asynchronous processing
+- **Groups**:
+  - "location_updates": Broadcast channel for all students
+  - "driver_{id}": Individual channel for each driver
+  - "student_{id}": Individual channel for each student
+
+### Performance Considerations
+
+- **Location History**: Stores points at 5-minute intervals to avoid database bloat
+- **Query Optimization**: Indexes on commonly queried fields (buggy, timestamp)
+- **Static Files**: Served efficiently via WhiteNoise
+
+### Security Features
+
+- **CSRF Protection**: For all state-changing operations
+- **Authentication**: Token-based with proper expiration
+- **Cookie Security**: HTTP-only, SameSite, and Secure flags
+- **Input Validation**: Via Django REST Framework serializers
+
+---
+
+## 🔄 Extending the System
+
+### Adding New API Endpoints
+
+1. Create a serializer in the app's `serializers.py`
+2. Create a view in the app's `views.py`
+3. Add the URL pattern to the app's `urls.py`
+4. Document the endpoint in Swagger via @swagger_auto_schema
+
+### Creating a New App
+
+1. Run `python manage.py startapp app_name`
+2. Add the app to INSTALLED_APPS in `settings.py`
+3. Create models, serializers, views, and URLs
+4. Add the app's URLs to the main `urls.py`
+
+### Working with WebSockets
+
+To add a new WebSocket consumer:
+1. Create a new consumer class in the app's `consumers.py`
+2. Add the routing pattern to the app's `routing.py`
+3. Include the routing in the main ASGI application
+
+---
+
+## 📞 Contact
+
+If you run into issues setting this up locally, please ping me directly.
