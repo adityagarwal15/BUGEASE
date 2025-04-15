@@ -5,7 +5,8 @@ from .views import (
     LogoutView, 
     UserProfileView, 
     CSRFTokenView,
-    RefreshTokenView
+    RefreshTokenView,
+    TestCookieView
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('csrf-token/', CSRFTokenView.as_view(), name='csrf-token'),
     path('refresh-token/', RefreshTokenView.as_view(), name='refresh-token'),
+    path('test-cookies/', TestCookieView.as_view(), name='test-cookies'),
 ]

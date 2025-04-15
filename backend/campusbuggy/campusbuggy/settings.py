@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # Must be at the top, before any middleware that can generate responses
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -54,7 +55,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "campusbuggy.urls"
@@ -159,12 +159,27 @@ CHANNEL_LAYERS = {
 CORS_ALLOWED_ORIGINS = [
     "https://700c-45-112-146-74.ngrok-free.app",
     "https://7b34-45-112-146-74.ngrok-free.app",
+    "http://127.0.0.1:8080",
     "http://localhost:8080",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True  # ONLY for development, not production!
+# For development only - remove in production
+CORS_ALLOW_ALL_ORIGINS = True  # ONLY for development, not production!
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "ngrok-skip-browser-warning",
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+]
+
+# Expose specific headers to the frontend
+CORS_EXPOSE_HEADERS = [
+    "x-debug-token",
 ]
 
 
@@ -181,6 +196,11 @@ CSRF_TRUSTED_ORIGINS = [
     "https://700c-45-112-146-74.ngrok-free.app",
     "https://7b34-45-112-146-74.ngrok-free.app",
     "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
 ]
 
 # Add token timeout settings - tokens will expire after 7 days
@@ -188,17 +208,16 @@ TOKEN_EXPIRED_AFTER_DAYS = 7
 
 # Cookie settings
 AUTH_COOKIE_NAME = 'auth_token'
-AUTH_COOKIE_SECURE = True  # Set to False in development if not using HTTPS
+AUTH_COOKIE_SECURE = False  # Should be True in production
 AUTH_COOKIE_HTTP_ONLY = True
-AUTH_COOKIE_SAMESITE = 'Lax'
-AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days in seconds
+AUTH_COOKIE_SAMESITE = 'None'  # Updated from 'Lax' to 'None' for cross-origin compatibility
+AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
 
 # CSRF settings
-CSRF_COOKIE_SECURE = True  # Set to False in development if not using HTTPS
+CSRF_COOKIE_SECURE = False  # Set to True in production
 CSRF_COOKIE_HTTPONLY = False  # Must be False so JS can access it
 CSRF_USE_SESSIONS = False  # Store CSRF token in cookie, not session
-CSRF_COOKIE_SAMESITE = 'Lax'
-
-# Enforce CSRF checks for unsafe HTTP methods only (POST, PUT, PATCH, DELETE)
+CSRF_COOKIE_SAMESITE = 'None'  # Changed from 'Lax' to 'None' for cross-origin compatibility
+CSRF_COOKIE_DOMAIN = None  # Auto-detect the domain
 CSRF_REQUIRE_SAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'] 
 

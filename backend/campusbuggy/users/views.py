@@ -71,13 +71,38 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             token = get_or_create_token(user)
+            
+            # Debug information
+            print(f"Login successful for user: {user.username}")
+            print(f"Setting cookie with token: {token.key[:6]}...")
+            print(f"Request headers: {dict(request.headers)}")
+            print(f"Origin: {request.headers.get('origin')}")
+            print(f"Referer: {request.headers.get('referer')}")
+            
+            # Setting response with token
             response = Response(
                 {"token": token.key, "user_type": user.user_type},
                 status=status.HTTP_200_OK
             )
             
-            # Set token in secure cookie
-            set_auth_cookie(response, token)
+            # Set token in secure cookie with SameSite=None for cross-origin requests
+            response.set_cookie(
+                'auth_token',
+                token.key,
+                max_age=60 * 60 * 24 * 7,  # 7 days in seconds
+                httponly=True,
+                secure=False,  # Must be False for HTTP development
+                samesite='None',  # Allow cross-origin cookies
+                path='/',  # Important: ensure cookie is sent with all paths
+                domain=None  # Let browser set the domain automatically
+            )
+            
+            # Add CORS headers explicitly
+            response["Access-Control-Allow-Origin"] = request.headers.get('origin', '*')
+            response["Access-Control-Allow-Credentials"] = "true"
+            
+            # Extra debug header to confirm token is actually in the response
+            response['X-Debug-Token'] = token.key[:6]
             
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -103,8 +128,23 @@ class UserProfileView(APIView):
         responses={200: UserProfileSerializer}
     )
     def get(self, request):
+        # Debug information
+        print(f"Profile request received")
+        print(f"Request headers: {dict(request.headers)}")
+        print(f"Auth: {request.auth}")
+        print(f"User: {request.user}")
+        print(f"Cookies: {request.COOKIES}")
+
         serializer = UserProfileSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response = Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # Add CORS headers for cross-origin requests
+        origin = request.headers.get('origin', '*')
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
+        response['X-Debug-Token'] = 'profile-accessed'
+        
+        return response
 
 
 class RefreshTokenView(APIView):
@@ -134,5 +174,56 @@ class RefreshTokenView(APIView):
         
         # Set new token in cookie
         set_auth_cookie(response, token)
+        
+        return response
+
+
+class TestCookieView(APIView):
+    """Test view for diagnosing cookie issues."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        # Get all cookies
+        cookies = request.COOKIES
+        
+        # Log all cookies received
+        print(f"All cookies received: {list(cookies.keys())}")
+        print(f"Request headers: {dict(request.headers)}")
+        print(f"Origin: {request.headers.get('origin')}")
+        print(f"Referer: {request.headers.get('referer')}")
+        
+        # Create a test cookie
+        response = Response({
+            "received_cookies": list(cookies.keys()),
+            "has_auth_token": "auth_token" in cookies,
+            "headers": {k: v for k, v in request.headers.items()},
+            "origin": request.headers.get('origin'),
+            "referer": request.headers.get('referer')
+        })
+        
+        # Set a test cookie with various SameSite options
+        response.set_cookie(
+            'test_cookie_lax',
+            'test_value',
+            max_age=60 * 60,  # 1 hour
+            httponly=False,   # Make it readable by JS
+            secure=False,     # Allow over HTTP
+            samesite='Lax',
+            path='/'
+        )
+        
+        response.set_cookie(
+            'test_cookie_none',
+            'test_value',
+            max_age=60 * 60,  # 1 hour
+            httponly=False,   # Make it readable by JS
+            secure=False,     # Allow over HTTP
+            samesite='None',
+            path='/'
+        )
+        
+        # Add CORS headers explicitly
+        response["Access-Control-Allow-Origin"] = request.headers.get('origin', '*')
+        response["Access-Control-Allow-Credentials"] = "true"
         
         return response

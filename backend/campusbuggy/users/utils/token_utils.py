@@ -42,14 +42,28 @@ def get_or_create_token(user):
 
 def set_auth_cookie(response, token):
     """Set the authentication token cookie on the response."""
+    # For debugging, print cookie settings
+    print(f"Setting auth cookie: {token.key[:6]}... with secure=False (forced for development)")
+    
+    # For development, always set secure=False regardless of settings
+    # In production, this would use settings.AUTH_COOKIE_SECURE
     response.set_cookie(
         settings.AUTH_COOKIE_NAME,
         token.key,
         max_age=settings.AUTH_COOKIE_MAX_AGE,
         httponly=settings.AUTH_COOKIE_HTTP_ONLY,
-        secure=settings.AUTH_COOKIE_SECURE,
-        samesite=settings.AUTH_COOKIE_SAMESITE
+        secure=False,  # Force to False for development
+        samesite='None',  # Changed from settings to None for cross-origin compatibility
+        path='/',  # Ensure cookie is sent with all requests
+        domain=None  # Let browser set the domain automatically
     )
+    
+    # Add CORS headers to ensure cross-origin cookie acceptance
+    if "Access-Control-Allow-Origin" not in response:
+        response["Access-Control-Allow-Origin"] = "*"
+    if "Access-Control-Allow-Credentials" not in response:
+        response["Access-Control-Allow-Credentials"] = "true"
+        
     return response
 
 
