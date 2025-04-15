@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { sendLocationUpdate } from '@/services/websocketService';
+import { sendLocationUpdate, websocketService } from '@/services/websocketService';
 import { WEBSOCKET_URL } from '@/config';
 
 interface BuggyDetails {

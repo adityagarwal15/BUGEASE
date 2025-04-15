@@ -8,16 +8,15 @@ export interface Buggy {
   is_running: boolean;
 }
 
-// Add driverPhone to BuggyLocation interface if API were to return it
 export interface BuggyLocation {
   buggy_number: string;
   latitude: number;
   longitude: number;
   direction: number | null;
-  driver_name: string | null;
+  driver_name: string | null; // Kept as nullable
   last_updated: string;
-  status?: string; // We'll derive this for frontend display
-  driver_phone?: string; // Note: This is not actually returned by the API based on docs
+  status?: string;
+  driver_phone?: string;
 }
 
 export interface LocationHistory {
@@ -25,6 +24,22 @@ export interface LocationHistory {
   longitude: number;
   timestamp: string;
 }
+
+// Get CSRF Token for non-GET requests
+const getCsrfToken = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/csrf-token/`, {
+      method: 'GET',
+      credentials: 'include' // Include cookies
+    });
+    
+    const data = await response.json();
+    return data.csrfToken;
+  } catch (error) {
+    console.error('Error fetching CSRF token:', error);
+    return '';
+  }
+};
 
 // Tracking service functions
 export const trackingService = {
@@ -101,10 +116,14 @@ export const trackingService = {
   // Update buggy running status
   updateBuggyStatus: async (buggyId: number, isRunning: boolean): Promise<Buggy> => {
     try {
+      // Get CSRF token for the POST request
+      const csrfToken = await getCsrfToken();
+      
       const response = await fetch(`${API_BASE_URL}/tracking/update-buggy-status/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({
           is_running: isRunning

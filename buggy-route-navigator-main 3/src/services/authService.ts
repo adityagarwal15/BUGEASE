@@ -1,3 +1,4 @@
+
 import { useToast } from "@/components/ui/use-toast";
 import { API_BASE_URL } from "@/config";
 
@@ -27,39 +28,30 @@ export interface UserProfile {
   phone_number: string;
 }
 
-export interface TokenResponse {
-  token: string;
-  user_type: 'student' | 'driver';
-}
+// Get CSRF Token for non-GET requests
+const getCsrfToken = async (): Promise<string> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/csrf-token/`, {
+      method: 'GET',
+      credentials: 'include' // Include cookies
+    });
+    
+    const data = await response.json();
+    return data.csrfToken;
+  } catch (error) {
+    console.error('Error fetching CSRF token:', error);
+    return '';
+  }
+};
 
 // Authentication service functions
 export const authService = {
-  // Get CSRF token for forms
-  getCsrfToken: async (): Promise<string> => {
+  // Login user with cookie-based authentication
+  login: async (credentials: LoginCredentials): Promise<{token: string, userType: 'student' | 'driver'}> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/user/csrf-token/`, {
-        method: 'GET',
-        credentials: 'include' // Include cookies
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get CSRF token');
-      }
-
-      const data = await response.json();
-      return data.csrfToken;
-    } catch (error) {
-      console.error('CSRF token error:', error);
-      throw error;
-    }
-  },
-
-  // Login user
-  login: async (credentials: LoginCredentials): Promise<TokenResponse> => {
-    try {
-      // Get CSRF token first for secure requests
-      const csrfToken = await authService.getCsrfToken();
-
+      // Get CSRF token for the POST request
+      const csrfToken = await getCsrfToken();
+      
       const response = await fetch(`${API_BASE_URL}/user/login/`, {
         method: 'POST',
         headers: {
@@ -69,32 +61,34 @@ export const authService = {
         body: JSON.stringify(credentials),
         credentials: 'include' // Include cookies
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.error || 'Login failed');
-      }
-
+      
       const data = await response.json();
-
-      // Store auth state
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+      
+      // Store minimal authentication state in localStorage
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userType', data.user_type);
       localStorage.setItem('lastAuthTime', Date.now().toString());
-
-      return data;
+      
+      return {
+        token: data.token, // For reference only, not stored in localStorage
+        userType: data.user_type
+      };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   },
-
-  // Register new user
-  register: async (credentials: RegisterCredentials): Promise<TokenResponse> => {
+  
+  // Register new user with cookie-based authentication
+  register: async (credentials: RegisterCredentials): Promise<{token: string, userType: 'student'}> => {
     try {
-      // Get CSRF token first for secure requests
-      const csrfToken = await authService.getCsrfToken();
-
+      // Get CSRF token for the POST request
+      const csrfToken = await getCsrfToken();
+      
       const response = await fetch(`${API_BASE_URL}/user/register/`, {
         method: 'POST',
         headers: {
@@ -104,32 +98,34 @@ export const authService = {
         body: JSON.stringify(credentials),
         credentials: 'include' // Include cookies
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.error || 'Registration failed');
-      }
-
+      
       const data = await response.json();
-
-      // Store auth state
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+      
+      // Store minimal authentication state in localStorage
       localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userType', data.user_type);
+      localStorage.setItem('userType', 'student');
       localStorage.setItem('lastAuthTime', Date.now().toString());
-
-      return data;
+      
+      return {
+        token: data.token, // For reference only, not stored in localStorage
+        userType: 'student'
+      };
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
     }
   },
-
-  // Logout user
+  
+  // Logout user with cookie-based authentication
   logout: async (): Promise<void> => {
     try {
-      // Get CSRF token first for secure requests
-      const csrfToken = await authService.getCsrfToken();
-
+      // Get CSRF token for the POST request
+      const csrfToken = await getCsrfToken();
+      
       const response = await fetch(`${API_BASE_URL}/user/logout/`, {
         method: 'POST',
         headers: {
@@ -137,122 +133,81 @@ export const authService = {
         },
         credentials: 'include' // Include cookies
       });
-
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.error || 'Logout failed');
+        const data = await response.json();
+        throw new Error(data.error || 'Logout failed');
       }
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
     } finally {
-      // Clear local storage regardless of server response
+      // Clear local storage
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('userType');
       localStorage.removeItem('lastAuthTime');
     }
   },
-
+  
   // Get user profile
   getProfile: async (): Promise<UserProfile> => {
     try {
-      // Check if token needs refreshing
-      await authService.refreshTokenIfNeeded();
-
       const response = await fetch(`${API_BASE_URL}/user/profile/`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         credentials: 'include' // Include cookies
       });
-
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-
-        // If unauthorized, clear local storage
-        if (response.status === 401) {
-          localStorage.removeItem('isLoggedIn');
-          localStorage.removeItem('userType');
-          localStorage.removeItem('lastAuthTime');
-        }
-
-        throw new Error(errorData.detail || errorData.error || 'Failed to fetch profile');
+        throw new Error(data.error || 'Failed to fetch profile');
       }
-
-      return await response.json();
+      
+      return data;
     } catch (error) {
       console.error('Profile fetch error:', error);
       throw error;
     }
   },
-
-  // Refresh token
+  
+  // Refresh authentication token
   refreshToken: async (): Promise<void> => {
     try {
-      // Get CSRF token first for secure requests
-      const csrfToken = await authService.getCsrfToken();
-
+      // Get CSRF token for the POST request
+      const csrfToken = await getCsrfToken();
+      
       const response = await fetch(`${API_BASE_URL}/user/refresh-token/`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRFToken': csrfToken
         },
         credentials: 'include' // Include cookies
       });
-
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.error || 'Failed to refresh token');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to refresh token');
       }
-
-      // Update last auth time
+      
+      // Update the last authentication time
       localStorage.setItem('lastAuthTime', Date.now().toString());
-
-      return await response.json();
     } catch (error) {
       console.error('Token refresh error:', error);
       throw error;
     }
   },
-
-  // Refresh token if needed (token is older than 6 days)
-  refreshTokenIfNeeded: async (): Promise<void> => {
+  
+  // Check if token needs refresh (older than 6 days)
+  needsTokenRefresh: (): boolean => {
     const lastAuthTime = localStorage.getItem('lastAuthTime');
-    if (!lastAuthTime) return;
-
-    const lastAuth = parseInt(lastAuthTime);
-    const now = Date.now();
+    if (!lastAuthTime) return false;
+    
     const sixDaysInMs = 6 * 24 * 60 * 60 * 1000; // 6 days in milliseconds
-
-    // If token is older than 6 days, refresh it
-    if (now - lastAuth > sixDaysInMs) {
-      await authService.refreshToken();
-    }
+    const timeSinceAuth = Date.now() - parseInt(lastAuthTime);
+    
+    return timeSinceAuth > sixDaysInMs;
   },
-
-  // Validate authentication status
-  validateAuthStatus: async (): Promise<boolean> => {
-    // If user is not logged in according to localStorage, return false
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-      return false;
-    }
-
-    try {
-      // Try to get profile to validate authentication
-      await authService.getProfile();
-      return true;
-    } catch (error) {
-      // Clear local storage on authentication failure
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userType');
-      localStorage.removeItem('lastAuthTime');
-      return false;
-    }
-  },
-
-  // Check if user is authenticated (local check only)
+  
+  // Check if user is authenticated
   isAuthenticated: (): boolean => {
     return localStorage.getItem('isLoggedIn') === 'true';
   },
@@ -274,22 +229,48 @@ export const authService = {
   // Check if current user is a student
   isStudent: (): boolean => {
     return localStorage.getItem('userType') === 'student';
+  },
+  
+  // Validate current authentication by calling profile endpoint
+  validateAuth: async (): Promise<boolean> => {
+    if (!authService.isAuthenticated()) {
+      return false;
+    }
+    
+    try {
+      await authService.getProfile();
+      
+      // Check if token needs refresh
+      if (authService.needsTokenRefresh()) {
+        await authService.refreshToken();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Auth validation error:', error);
+      
+      // Clear auth state if validation fails
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('lastAuthTime');
+      
+      return false;
+    }
   }
 };
 
 // Custom hook for authentication
 export const useAuth = () => {
   const { toast } = useToast();
-
+  
   const handleAuthError = (error: any) => {
-    const message = error.message || "An error occurred during authentication";
     toast({
       title: "Authentication Error",
-      description: message,
+      description: error.message || "An error occurred during authentication",
       variant: "destructive"
     });
   };
-
+  
   return {
     login: async (credentials: LoginCredentials) => {
       try {
@@ -331,10 +312,18 @@ export const useAuth = () => {
         throw error;
       }
     },
-    validateAuthStatus: authService.validateAuthStatus,
+    validateAuth: async () => {
+      try {
+        return await authService.validateAuth();
+      } catch (error) {
+        handleAuthError(error);
+        return false;
+      }
+    },
     isAuthenticated: authService.isAuthenticated,
     getUserType: authService.getUserType,
     isDriver: authService.isDriver,
-    isStudent: authService.isStudent
+    isStudent: authService.isStudent,
+    needsTokenRefresh: authService.needsTokenRefresh
   };
 };

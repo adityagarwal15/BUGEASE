@@ -1,179 +1,246 @@
+import { WEBSOCKET_URL } from "@/config";
+import { useState, useEffect } from 'react';
+import { BuggyLocation } from './trackingService'; // Import BuggyLocation from trackingService instead of redefining it
 
-import { useEffect, useRef, useState } from 'react';
-import { WEBSOCKET_URL } from '@/config';
-import { BuggyLocation } from './trackingService';
+type MessageCallback = (message: any) => void;
+type StatusCallback = (status: 'connected' | 'disconnected' | 'error') => void;
 
-// Types
-interface LocationUpdate {
-  type: 'location_update';
-  buggy_id: number;
-  latitude: number;
-  longitude: number;
-  direction: number | null;
-  driver_name: string;
-  timestamp: string;
-}
-
-interface SubscriptionConfirmed {
-  type: 'subscription_confirmed';
-  buggy_ids: number[];
-}
-
-type WebSocketMessage = LocationUpdate | SubscriptionConfirmed;
-
-// WebSocket service for real-time updates
-export const createWebSocketConnection = (token: string | null) => {
-  if (!token) {
-    throw new Error('No authentication token found');
+// WebSocket service for handling real-time communication with the server
+class WebSocketService {
+  private socket: WebSocket | null = null;
+  private messageCallbacks: MessageCallback[] = [];
+  private statusCallbacks: StatusCallback[] = [];
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeout: number | null = null;
+  
+  // Connect to WebSocket server using cookie-based authentication
+  connect() {
+    if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
+      console.log('WebSocket is already connected or connecting');
+      return;
+    }
+    
+    try {
+      // Create WebSocket connection
+      // Cookies will be automatically sent with the WebSocket handshake
+      this.socket = new WebSocket(`${WEBSOCKET_URL}/location/updates/`);
+      
+      // Event handlers
+      this.socket.onopen = this.handleOpen.bind(this);
+      this.socket.onclose = this.handleClose.bind(this);
+      this.socket.onmessage = this.handleMessage.bind(this);
+      this.socket.onerror = this.handleError.bind(this);
+    } catch (error) {
+      console.error('WebSocket connection error:', error);
+      this.notifyStatus('error');
+    }
   }
   
-  const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates/?token=${token}`);
+  // Disconnect from WebSocket server
+  disconnect() {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+    
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    
+    this.reconnectAttempts = 0;
+  }
   
-  socket.onopen = () => {
+  // Send a message to the WebSocket server
+  sendMessage(message: any) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      try {
+        this.socket.send(JSON.stringify(message));
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    } else {
+      console.warn('Cannot send message, WebSocket is not open');
+    }
+  }
+  
+  // Subscribe to messages from the WebSocket server
+  onMessage(callback: MessageCallback) {
+    this.messageCallbacks.push(callback);
+  }
+  
+  // Subscribe to connection status changes
+  onStatus(callback: StatusCallback) {
+    this.statusCallbacks.push(callback);
+  }
+  
+  // WebSocket event handlers
+  private handleOpen() {
     console.log('WebSocket connection established');
-  };
+    this.reconnectAttempts = 0;
+    this.notifyStatus('connected');
+  }
   
-  socket.onclose = (event) => {
+  private handleClose(event: CloseEvent) {
     console.log('WebSocket connection closed:', event);
-  };
+    this.notifyStatus('disconnected');
+    
+    // Attempt to reconnect if not a normal closure
+    if (event.code !== 1000) {
+      this.attemptReconnect();
+    }
+  }
   
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
-  };
+  private handleMessage(event: MessageEvent) {
+    try {
+      const data = JSON.parse(event.data);
+      this.notifyMessage(data);
+    } catch (error) {
+      console.error('Error parsing WebSocket message:', error, event.data);
+    }
+  }
   
-  return socket;
-};
+  private handleError(event: Event) {
+    console.error('WebSocket error:', event);
+    this.notifyStatus('error');
+  }
+  
+  // Helper methods
+  private notifyMessage(data: any) {
+    this.messageCallbacks.forEach(callback => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error('Error in WebSocket message callback:', error);
+      }
+    });
+  }
+  
+  private notifyStatus(status: 'connected' | 'disconnected' | 'error') {
+    this.statusCallbacks.forEach(callback => {
+      try {
+        callback(status);
+      } catch (error) {
+        console.error('Error in WebSocket status callback:', error);
+      }
+    });
+  }
+  
+  private attemptReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Maximum reconnection attempts reached');
+      return;
+    }
+    
+    this.reconnectAttempts++;
+    
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    console.log(`Attempting to reconnect in ${delay / 1000} seconds (attempt ${this.reconnectAttempts})`);
+    
+    this.reconnectTimeout = window.setTimeout(() => {
+      this.connect();
+    }, delay);
+  }
 
-// Subscribe to specific buggy IDs
-export const subscribeToBuggies = (socket: WebSocket, buggyIds: number[]) => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
+  // Subscribe to buggies (for students)
+  subscribeToBuggies(buggyIds: number[]) {
+    const message = {
       type: 'subscribe',
       buggy_ids: buggyIds
-    }));
-  } else {
-    console.error('WebSocket is not open. Current state:', socket.readyState);
+    };
+    this.sendMessage(message);
   }
-};
+}
 
-// For drivers to send location updates
+// Create a singleton instance of the WebSocket service
+export const websocketService = new WebSocketService();
+
+// Function to send location updates via WebSocket (for drivers)
 export const sendLocationUpdate = (
-  socket: WebSocket, 
-  buggyId: number, 
-  latitude: number, 
-  longitude: number, 
-  direction: number | null = null
+  socket: WebSocket,
+  buggyId: number,
+  latitude: number,
+  longitude: number,
+  direction: number | null
 ) => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
+  try {
+    const message = {
       type: 'location_update',
       buggy_id: buggyId,
       latitude,
       longitude,
       direction
-    }));
-  } else {
-    console.error('WebSocket is not open. Current state:', socket.readyState);
+    };
+    socket.send(JSON.stringify(message));
+  } catch (error) {
+    console.error('Error sending location update:', error);
   }
 };
 
-// Custom hook to use WebSocket for location updates
-export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
-  const [locations, setLocations] = useState<BuggyLocation[]>([]);
-  const [subscribedBuggyIds, setSubscribedBuggyIds] = useState<number[]>(initialBuggyIds);
+// Hook for subscribing to and receiving real-time buggy locations
+export function useWebSocketLocations(buggyIds: number[]) {
   const [isConnected, setIsConnected] = useState(false);
-  const socketRef = useRef<WebSocket | null>(null);
-  
+  const [locations, setLocations] = useState<BuggyLocation[]>([]);
+
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      console.error('No authentication token found');
-      return;
-    }
-    
-    // Create WebSocket connection
-    try {
-      const socket = createWebSocketConnection(token);
-      socketRef.current = socket;
-      
-      socket.onopen = () => {
-        setIsConnected(true);
-        
-        // Subscribe to initial buggy IDs
-        if (initialBuggyIds.length > 0) {
-          subscribeToBuggies(socket, initialBuggyIds);
-        }
-      };
-      
-      socket.onclose = () => {
-        setIsConnected(false);
-      };
-      
-      socket.onmessage = (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
+    // Connect to WebSocket
+    websocketService.connect();
+
+    // Subscribe to WebSocket messages
+    const handleMessage = (message: any) => {
+      if (message.type === 'location_update') {
+        setLocations(prev => {
+          // Check if we already have this buggy in our locations
+          const existingIndex = prev.findIndex(
+            loc => loc.buggy_number === String(message.buggy_id)
+          );
           
-          if (message.type === 'subscription_confirmed') {
-            console.log('Subscribed to buggies:', message.buggy_ids);
-            setSubscribedBuggyIds(message.buggy_ids);
-          } else if (message.type === 'location_update') {
-            // Update locations with new data
-            setLocations(prevLocations => {
-              // Find if we already have this buggy in our locations
-              const existingIndex = prevLocations.findIndex(
-                loc => loc.buggy_number === message.buggy_id.toString()
-              );
-              
-              // Create new location object from the message
-              const newLocation: BuggyLocation = {
-                buggy_number: message.buggy_id.toString(),
-                latitude: message.latitude,
-                longitude: message.longitude,
-                direction: message.direction,
-                driver_name: message.driver_name,
-                last_updated: message.timestamp,
-                // Derive status (customize as needed)
-                status: 'available'
-              };
-              
-              // If we already have this buggy, update it, otherwise add it
-              if (existingIndex >= 0) {
-                const newLocations = [...prevLocations];
-                newLocations[existingIndex] = newLocation;
-                return newLocations;
-              } else {
-                return [...prevLocations, newLocation];
-              }
-            });
+          // Create the new location object
+          const newLocation: BuggyLocation = {
+            buggy_number: String(message.buggy_id),
+            latitude: message.latitude,
+            longitude: message.longitude,
+            direction: message.direction,
+            driver_name: message.driver_name || null, // Ensure null is used when undefined
+            last_updated: message.timestamp || new Date().toISOString(),
+            status: 'available' // Default status
+          };
+          
+          // Either update existing or add new location
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = newLocation;
+            return updated;
+          } else {
+            return [...prev, newLocation];
           }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-    } catch (error) {
-      console.error('Error setting up WebSocket:', error);
-    }
-    
-    // Cleanup function
-    return () => {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.close();
+        });
       }
     };
-  }, [initialBuggyIds]);
-  
-  // Function to subscribe to additional buggy IDs
-  const subscribe = (buggyIds: number[]) => {
-    if (socketRef.current && isConnected) {
-      subscribeToBuggies(socketRef.current, buggyIds);
-    }
-  };
-  
-  return { 
-    locations, 
-    isConnected, 
-    subscribedBuggyIds, 
-    subscribe 
-  };
-};
+
+    // Handle connection status changes
+    const handleStatus = (status: 'connected' | 'disconnected' | 'error') => {
+      setIsConnected(status === 'connected');
+      
+      // If connected and we have buggy IDs, subscribe to them
+      if (status === 'connected' && buggyIds.length > 0) {
+        websocketService.subscribeToBuggies(buggyIds);
+      }
+    };
+
+    // Register handlers
+    websocketService.onMessage(handleMessage);
+    websocketService.onStatus(handleStatus);
+
+    // Clean up function
+    return () => {
+      // We'll keep the websocket connection alive, just remove our handlers
+      const emptyCallback = () => {};
+      websocketService.onMessage(emptyCallback);
+      websocketService.onStatus(emptyCallback);
+    };
+  }, [buggyIds]); // Re-run if buggyIds change
+
+  return { locations, isConnected };
+}

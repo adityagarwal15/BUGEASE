@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/services/authService';
 import { useToast } from '@/components/ui/use-toast';
 import { API_BASE_URL } from '@/config';
 

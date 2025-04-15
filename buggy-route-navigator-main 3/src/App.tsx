@@ -27,8 +27,8 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import AdminAuth from "./components/AdminAuth";
-import { useEffect } from "react";
-import { authService } from "./services/authService";
+import { useEffect, useState } from "react";
+import { useAuth, authService } from "./services/authService";
 
 // Import driver pages
 import DriverDashboard from "./pages/driver/Dashboard";
@@ -37,39 +37,74 @@ import DriverFaq from "./pages/driver/Faq";
 
 const queryClient = new QueryClient();
 
-// Check if user is authenticated
-const isAuthenticated = () => {
-  return authService.isAuthenticated();
-};
-
 // Check if user is an admin
 const isAdmin = () => {
   // This would be replaced with actual admin check
   return localStorage.getItem("isAdmin") === "true";
 };
 
-// Check if user is a driver
-const isDriver = () => {
-  return authService.isDriver();
-};
-
-// Check if user is a student
-const isStudent = () => {
-  return authService.isStudent();
+// AuthenticationProvider component to validate authentication on app startup
+const AuthenticationProvider = ({ children }: { children: React.ReactNode }) => {
+  const [authChecked, setAuthChecked] = useState(false);
+  const { validateAuth } = useAuth();
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Validate current authentication
+        await validateAuth();
+      } finally {
+        // Mark auth check as complete regardless of result
+        setAuthChecked(true);
+      }
+    };
+    
+    checkAuth();
+    
+    // Set up token refresh interval (check every hour)
+    const refreshInterval = setInterval(async () => {
+      if (authService.isAuthenticated() && authService.needsTokenRefresh()) {
+        try {
+          await authService.refreshToken();
+          console.log('Auth token refreshed');
+        } catch (error) {
+          console.error('Failed to refresh token:', error);
+        }
+      }
+    }, 60 * 60 * 1000); // 1 hour in milliseconds
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [validateAuth]);
+  
+  // Show loading state while checking authentication
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="mt-2">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
 };
 
 // Protected route component that redirects to login if not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
+  return authService.isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
 };
 
 // Driver route component that redirects to login if not a driver
 const DriverRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isAuthenticated()) {
+  if (!authService.isAuthenticated()) {
     return <Navigate to="/login" />;
   }
   
-  if (!isDriver()) {
+  if (!authService.isDriver()) {
     return <Navigate to="/dashboard" />;
   }
   
@@ -78,11 +113,11 @@ const DriverRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Student route component that redirects to login if not a student
 const StudentRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isAuthenticated()) {
+  if (!authService.isAuthenticated()) {
     return <Navigate to="/login" />;
   }
   
-  if (!isStudent()) {
+  if (!authService.isStudent()) {
     return <Navigate to="/driver/dashboard" />;
   }
   
@@ -91,7 +126,7 @@ const StudentRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Admin route component that redirects to dashboard if not an admin
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isAuthenticated()) {
+  if (!authService.isAuthenticated()) {
     return <Navigate to="/login" />;
   }
   
@@ -134,186 +169,188 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <Routes>
-            {/* Home page */}
-            <Route path="/" element={
-              <>
-                <Index />
-                <Footer />
-              </>
-            } />
-            
-            {/* Auth pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            
-            {/* Admin Authentication */}
-            <Route path="/admin-auth" element={<AdminAuth />} />
-            
-            {/* Student protected pages with navbar */}
-            <Route path="/dashboard" element={
-              <StudentRoute>
+          <AuthenticationProvider>
+            <Routes>
+              {/* Home page */}
+              <Route path="/" element={
+                <>
+                  <Index />
+                  <Footer />
+                </>
+              } />
+              
+              {/* Auth pages */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              
+              {/* Admin Authentication */}
+              <Route path="/admin-auth" element={<AdminAuth />} />
+              
+              {/* Student protected pages with navbar */}
+              <Route path="/dashboard" element={
+                <StudentRoute>
+                  <AppLayout includeFooter={false}>
+                    <Dashboard />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/tracking" element={
                 <AppLayout includeFooter={false}>
-                  <Dashboard />
+                  <TrackingMap />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/tracking" element={
-              <AppLayout includeFooter={false}>
-                <TrackingMap />
-              </AppLayout>
-            } />
-            
-            <Route path="/book" element={
-              <StudentRoute>
+              } />
+              
+              <Route path="/book" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <BookRide />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/history" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <RideHistory />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/profile" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <Profile />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/notifications" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <Notifications />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/alerts" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <Alerts />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              <Route path="/stats" element={
+                <StudentRoute>
+                  <AppLayout>
+                    <UsageStats />
+                  </AppLayout>
+                </StudentRoute>
+              } />
+              
+              {/* Driver pages */}
+              <Route path="/driver/dashboard" element={
+                <DriverRoute>
+                  <AppLayout includeFooter={false}>
+                    <DriverDashboard />
+                  </AppLayout>
+                </DriverRoute>
+              } />
+              
+              <Route path="/driver/profile" element={
+                <DriverRoute>
+                  <AppLayout>
+                    <DriverProfile />
+                  </AppLayout>
+                </DriverRoute>
+              } />
+              
+              <Route path="/driver/faq" element={
+                <DriverRoute>
+                  <AppLayout>
+                    <DriverFaq />
+                  </AppLayout>
+                </DriverRoute>
+              } />
+              
+              <Route path="/driver/notifications" element={
+                <DriverRoute>
+                  <AppLayout>
+                    <Notifications />
+                  </AppLayout>
+                </DriverRoute>
+              } />
+              
+              <Route path="/driver/alerts" element={
+                <DriverRoute>
+                  <AppLayout>
+                    <Alerts />
+                  </AppLayout>
+                </DriverRoute>
+              } />
+              
+              {/* Admin-only route */}
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <AppLayout includeFooter={false}>
+                    <AdminPanel />
+                  </AppLayout>
+                </AdminRoute>
+              } />
+              
+              {/* Public pages */}
+              <Route path="/about" element={
                 <AppLayout>
-                  <BookRide />
+                  <About />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/history" element={
-              <StudentRoute>
+              } />
+              
+              <Route path="/gallery" element={
                 <AppLayout>
-                  <RideHistory />
+                  <Gallery />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/profile" element={
-              <StudentRoute>
+              } />
+              
+              <Route path="/team" element={
                 <AppLayout>
-                  <Profile />
+                  <Team />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/notifications" element={
-              <StudentRoute>
+              } />
+              
+              {/* New pages */}
+              <Route path="/faq" element={
                 <AppLayout>
-                  <Notifications />
+                  <Faq />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/alerts" element={
-              <StudentRoute>
+              } />
+              
+              <Route path="/contact" element={
                 <AppLayout>
-                  <Alerts />
+                  <Contact />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            <Route path="/stats" element={
-              <StudentRoute>
+              } />
+              
+              <Route path="/privacy" element={
                 <AppLayout>
-                  <UsageStats />
+                  <Privacy />
                 </AppLayout>
-              </StudentRoute>
-            } />
-            
-            {/* Driver pages */}
-            <Route path="/driver/dashboard" element={
-              <DriverRoute>
-                <AppLayout includeFooter={false}>
-                  <DriverDashboard />
-                </AppLayout>
-              </DriverRoute>
-            } />
-            
-            <Route path="/driver/profile" element={
-              <DriverRoute>
+              } />
+              
+              <Route path="/terms" element={
                 <AppLayout>
-                  <DriverProfile />
+                  <Terms />
                 </AppLayout>
-              </DriverRoute>
-            } />
-            
-            <Route path="/driver/faq" element={
-              <DriverRoute>
+              } />
+              
+              {/* Not found page */}
+              <Route path="*" element={
                 <AppLayout>
-                  <DriverFaq />
+                  <NotFound />
                 </AppLayout>
-              </DriverRoute>
-            } />
-            
-            <Route path="/driver/notifications" element={
-              <DriverRoute>
-                <AppLayout>
-                  <Notifications />
-                </AppLayout>
-              </DriverRoute>
-            } />
-            
-            <Route path="/driver/alerts" element={
-              <DriverRoute>
-                <AppLayout>
-                  <Alerts />
-                </AppLayout>
-              </DriverRoute>
-            } />
-            
-            {/* Admin-only route */}
-            <Route path="/admin" element={
-              <AdminRoute>
-                <AppLayout includeFooter={false}>
-                  <AdminPanel />
-                </AppLayout>
-              </AdminRoute>
-            } />
-            
-            {/* Public pages */}
-            <Route path="/about" element={
-              <AppLayout>
-                <About />
-              </AppLayout>
-            } />
-            
-            <Route path="/gallery" element={
-              <AppLayout>
-                <Gallery />
-              </AppLayout>
-            } />
-            
-            <Route path="/team" element={
-              <AppLayout>
-                <Team />
-              </AppLayout>
-            } />
-            
-            {/* New pages */}
-            <Route path="/faq" element={
-              <AppLayout>
-                <Faq />
-              </AppLayout>
-            } />
-            
-            <Route path="/contact" element={
-              <AppLayout>
-                <Contact />
-              </AppLayout>
-            } />
-            
-            <Route path="/privacy" element={
-              <AppLayout>
-                <Privacy />
-              </AppLayout>
-            } />
-            
-            <Route path="/terms" element={
-              <AppLayout>
-                <Terms />
-              </AppLayout>
-            } />
-            
-            {/* Not found page */}
-            <Route path="*" element={
-              <AppLayout>
-                <NotFound />
-              </AppLayout>
-            } />
-          </Routes>
+              } />
+            </Routes>
+          </AuthenticationProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
