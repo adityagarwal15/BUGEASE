@@ -26,21 +26,21 @@ export const createWebSocketConnection = (token: string | null) => {
   if (!token) {
     throw new Error('No authentication token found');
   }
-  
-  const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates/?token=${token}`);
-  
+
+  const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates?token=${token}`);
+
   socket.onopen = () => {
     console.log('WebSocket connection established');
   };
-  
+
   socket.onclose = (event) => {
     console.log('WebSocket connection closed:', event);
   };
-  
+
   socket.onerror = (error) => {
     console.error('WebSocket error:', error);
   };
-  
+
   return socket;
 };
 
@@ -58,10 +58,10 @@ export const subscribeToBuggies = (socket: WebSocket, buggyIds: number[]) => {
 
 // For drivers to send location updates
 export const sendLocationUpdate = (
-  socket: WebSocket, 
-  buggyId: number, 
-  latitude: number, 
-  longitude: number, 
+  socket: WebSocket,
+  buggyId: number,
+  latitude: number,
+  longitude: number,
   direction: number | null = null
 ) => {
   if (socket.readyState === WebSocket.OPEN) {
@@ -83,37 +83,37 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
   const [subscribedBuggyIds, setSubscribedBuggyIds] = useState<number[]>(initialBuggyIds);
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
-  
+
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    
+
     if (!token) {
       console.error('No authentication token found');
       return;
     }
-    
+
     // Create WebSocket connection
     try {
       const socket = createWebSocketConnection(token);
       socketRef.current = socket;
-      
+
       socket.onopen = () => {
         setIsConnected(true);
-        
+
         // Subscribe to initial buggy IDs
         if (initialBuggyIds.length > 0) {
           subscribeToBuggies(socket, initialBuggyIds);
         }
       };
-      
+
       socket.onclose = () => {
         setIsConnected(false);
       };
-      
+
       socket.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          
+
           if (message.type === 'subscription_confirmed') {
             console.log('Subscribed to buggies:', message.buggy_ids);
             setSubscribedBuggyIds(message.buggy_ids);
@@ -124,7 +124,7 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
               const existingIndex = prevLocations.findIndex(
                 loc => loc.buggy_number === message.buggy_id.toString()
               );
-              
+
               // Create new location object from the message
               const newLocation: BuggyLocation = {
                 buggy_number: message.buggy_id.toString(),
@@ -136,7 +136,7 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
                 // Derive status (customize as needed)
                 status: 'available'
               };
-              
+
               // If we already have this buggy, update it, otherwise add it
               if (existingIndex >= 0) {
                 const newLocations = [...prevLocations];
@@ -154,7 +154,7 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
     }
-    
+
     // Cleanup function
     return () => {
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -162,18 +162,18 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
       }
     };
   }, [initialBuggyIds]);
-  
+
   // Function to subscribe to additional buggy IDs
   const subscribe = (buggyIds: number[]) => {
     if (socketRef.current && isConnected) {
       subscribeToBuggies(socketRef.current, buggyIds);
     }
   };
-  
-  return { 
-    locations, 
-    isConnected, 
-    subscribedBuggyIds, 
-    subscribe 
+
+  return {
+    locations,
+    isConnected,
+    subscribedBuggyIds,
+    subscribe
   };
 };
