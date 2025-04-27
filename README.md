@@ -2,7 +2,7 @@
 
 A real-time campus transportation management system that connects students with campus buggy drivers.
 
-![Campus Buggy Tracker](https://via.placeholder.com/800x400?text=Campus+Buggy+Tracker)
+![Campus Buggy Tracker](https://res.cloudinary.com/dcf0cpuqf/image/upload/v1744269447/Screenshot_2025-04-10_124713_jdy3um.png)
 
 ## Overview
 
@@ -128,17 +128,14 @@ python manage.py runserver
 
 ### Screenshots
 
-![Student Dashboard](https://via.placeholder.com/800x450?text=Student+Dashboard)
+![Student Dashboard](https://res.cloudinary.com/dcf0cpuqf/image/upload/v1745765773/Screenshot_2025-04-27_202534_m1u0hf.png)
 *Student Dashboard showing available buggies and map view*
 
-![Driver Interface](https://via.placeholder.com/800x450?text=Driver+Interface)
+![Driver Interface](https://res.cloudinary.com/dcf0cpuqf/image/upload/v1744269447/Screenshot_2025-04-10_124713_jdy3um.png)
 *Driver interface showing status controls and current location*
 
-![Real-time Tracking](https://via.placeholder.com/800x450?text=Realtime+Tracking)
+![Real-time Tracking](https://res.cloudinary.com/dcf0cpuqf/image/upload/v1745765773/Screenshot_2025-04-27_202551_hwo1qn.png)
 *Live tracking view with multiple buggies on campus map*
-
-![User Authentication](https://via.placeholder.com/800x450?text=Authentication)
-*User login and registration screens*
 
 ### Demo Video
 
