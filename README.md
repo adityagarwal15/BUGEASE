@@ -157,9 +157,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Project Maintainer - [Your Name](mailto:your.email@example.com)
+Project Maintainer - [Aditya Agarwal](mailto:adityaagarwal0081@gmail.com)
 
-Project Link: [https://github.com/your-username/campus-buggy-tracker](https://github.com/your-username/campus-buggy-tracker)
+Project Link: [https://github.com/your-username/campus-buggy-tracker](https://github.com/adityagarwal15/BUGEASE)
 
 ---
 
