@@ -1,196 +1,169 @@
-# 🚀 Campus Buggy Tracking Website
+# Campus Buggy Tracker
 
-A real-time buggy tracking system for campus transportation that allows students to track, book, and manage campus buggy rides with AI-optimized routes.
+A real-time campus transportation management system that connects students with campus buggy drivers.
 
-## 📌 Features
+![Campus Buggy Tracker](https://via.placeholder.com/800x400?text=Campus+Buggy+Tracker)
 
-- **Live Buggy Tracking** - Track campus buggies in real-time on a map
-- **Ride Booking System** - Request and book buggies with a few clicks
-- **Trip History** - View your past rides and route details
-- **Admin Dashboard** - Comprehensive management of drivers and buggies
-- **AI-Powered Routes** - Machine learning optimized route suggestions
-- **Real-time Updates** - WebSocket integration for instant location updates
+## Overview
 
-## 👥 Team Members
+Campus Buggy Tracker is a web application that provides real-time tracking and management of campus transportation vehicles (buggies). The platform serves two primary user types:
 
-- **Aditya** (Frontend) - HTML, CSS, JavaScript, GSAP
-- **Ishaan** (Backend) - Django, Django Rest Framework, WebSockets, PostgreSQL
+- **Students**: Can view available buggies on campus, track their locations in real-time, and (in future releases) book rides
+- **Drivers**: Can update their status (idle, running), share their location, and manage ride requests
 
-## 🛠️ Tech Stack
+The application uses real-time communication via WebSockets to ensure students always have the most up-to-date information about buggy availability and location.
+
+## Features
+
+### Current Features
+
+#### For Students
+- Real-time dashboard showing all available buggies on campus
+- Live tracking of buggy locations on an interactive map
+- User authentication and profile management
+- Responsive design for mobile and desktop use
+
+#### For Drivers
+- Driver-specific login portal
+- Status management (idle/running)
+- Location sharing with GPS integration
+- Real-time updates to the central server
+
+### Planned Features
+- Ride booking functionality
+- Estimated arrival times
+- Route optimization
+- In-app notifications
+- Rating system for drivers
+- Historical ride data and analytics
+
+## Technology Stack
 
 ### Frontend
-- HTML, CSS, JavaScript
-- GSAP for smooth animations
-- Google Maps API for location tracking
+- **Framework**: React 18.3.1 with TypeScript
+- **Build Tool**: Vite with SWC for React compilation
+- **Routing**: React Router DOM 6.26.2
+- **UI Components**: Shadcn/UI with Tailwind CSS
+- **State Management**: React Query (TanStack Query)
+- **Form Handling**: React Hook Form with Zod validation
+- **Maps**: Google Maps JavaScript API
+- **Data Visualization**: Recharts
+- **UI Components**: Various Radix UI primitives, Lucide React icons
+- **Theme Management**: next-themes
 
 ### Backend
-- Django & Django Rest Framework (DRF)
-- WebSockets with Django Channels
-- PostgreSQL Database
-- AI route optimization with Scikit-learn
+- **Framework**: Django with Django Rest Framework
+- **Real-time Communication**: WebSockets
+- **Authentication**: Django authentication system with JWT
 
-### Deployment
-- Frontend: Netlify/Vercel
-- Backend: Render/Railway
-
-## 📊 Database Schema
-
-### User Model
-```python
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
-class CustomUser(AbstractUser):
-    ROLE_CHOICES = [('student', 'Student'), ('driver', 'Driver')]
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-```
-
-### Buggy Model
-```python
-class Buggy(models.Model):
-    driver = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="buggy")
-    location = models.JSONField()  # Stores latitude & longitude
-    is_available = models.BooleanField(default=True)
-```
-
-### Ride Booking Model
-```python
-class RideBooking(models.Model):
-    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    buggy = models.ForeignKey(Buggy, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed')])
-    pickup_location = models.JSONField()
-    drop_location = models.JSONField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-```
-
-## 🔌 API Endpoints
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/register/ | Register a student or driver |
-| POST | /api/login/ | Login and get auth token |
-
-### Student APIs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/buggies/ | Get list of active buggies |
-| POST | /api/request-ride/ | Request a buggy |
-| GET | /api/trip-history/ | Get past rides |
-
-### Driver APIs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/update-location/ | Send live location |
-| GET | /api/my-trips/ | View completed trips |
-
-### Admin APIs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/all-rides/ | View all rides in system |
-| POST | /api/add-buggy/ | Add new buggy |
-
-## 🔧 Key Implementations
-
-### WebSocket Real-time Tracking (Backend)
-```python
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-
-class BuggyTrackingConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
-        await self.channel_layer.group_add("buggy_tracking", self.channel_name)
-
-    async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("buggy_tracking", self.channel_name)
-
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        await self.channel_layer.group_send(
-            "buggy_tracking",
-            {"type": "send_location", "message": data}
-        )
-
-    async def send_location(self, event):
-        await self.send(text_data=json.dumps(event["message"]))
-```
-
-### WebSocket Integration (Frontend)
-```javascript
-const socket = new WebSocket("ws://localhost:8000/ws/track/");
-
-socket.onmessage = function(event) {
-    let buggyData = JSON.parse(event.data);
-    updateMap(buggyData);
-};
-```
-
-### GSAP Animations
-```javascript
-gsap.from(".buggy-marker", { scale: 0, duration: 1, ease: "elastic.out(1, 0.5)" });
-```
-
-### AI Route Optimization
-```python
-from sklearn.cluster import KMeans
-import numpy as np
-
-data = np.array([[lat1, lon1], [lat2, lon2], [lat3, lon3]])  # Past trip locations
-kmeans = KMeans(n_clusters=3).fit(data)
-optimized_routes = kmeans.cluster_centers_
-```
-
-## 🛣️ Project Development Timeline
-
-| Day | Task | Responsibility |
-|---------|---------|-------------------|
-| Day 1 | Plan database, frontend UI, and API structure | Team Discussion |
-| Day 2 | Setup Django backend (User auth, models, database) | Ishaan |
-| Day 3 | Design homepage & login page with GSAP animations | Aditya |
-| Day 4 | Integrate Google Maps API for real-time tracking | Aditya |
-| Day 5 | Build student & driver dashboards | Aditya & Ishaan |
-| Day 6 | Implement WebSockets for real-time buggy tracking | Ishaan |
-| Day 7 | Add trip history for students & drivers | Ishaan |
-| Day 8 | Build Admin Panel for managing drivers & buggies | Ishaan |
-| Day 9 | AI-powered route optimization | Ishaan |
-| Day 10 | Final testing, bug fixes, and deployment | Team |
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.8+
-- Node.js 14+
+### Database
 - PostgreSQL
 
-### Installation
+### Third-party Services
+- Google Maps API for location services
+- Google Gemini for chatbot assistance
 
-1. Clone the repository
+## Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- Python (v3.9 or higher)
+- PostgreSQL
+- Google Maps API key
+
+### Frontend Setup
 ```bash
-git clone https://github.com/yourusername/campus-buggy-tracking.git
-cd campus-buggy-tracking
+# Clone the repository
+git clone https://github.com/your-username/campus-buggy-tracker.git
+cd campus-buggy-tracker/frontend
+
+# Install dependencies
+npm install
+
+# Create .env file with your Google Maps API key
+echo "VITE_GOOGLE_MAPS_API_KEY=your_api_key_here" > .env
+
+# Start development server
+npm run dev
 ```
 
-2. Set up the backend
+### Backend Setup
 ```bash
-# Create a virtual environment
+# Navigate to backend directory
+cd ../backend
+
+# Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database credentials and secret key
+
 # Run migrations
 python manage.py migrate
 
-# Start the server
+# Start development server
 python manage.py runserver
 ```
 
-3. Set up the frontend
-```bash
-cd frontend
-npm install
-npm start
-```
+## Usage
+
+### Student Interface
+1. Login with your student credentials
+2. View the dashboard to see all available buggies
+3. Click on a buggy to see its details and track its location
+4. (Future feature) Book a ride by selecting a destination
+
+### Driver Interface
+1. Login with your driver credentials
+2. Update your status (idle/running)
+3. Your location will be automatically shared while the app is open
+4. (Future feature) Accept or reject ride requests
+
+## Screenshots & Demo
+
+### Screenshots
+
+![Student Dashboard](https://via.placeholder.com/800x450?text=Student+Dashboard)
+*Student Dashboard showing available buggies and map view*
+
+![Driver Interface](https://via.placeholder.com/800x450?text=Driver+Interface)
+*Driver interface showing status controls and current location*
+
+![Real-time Tracking](https://via.placeholder.com/800x450?text=Realtime+Tracking)
+*Live tracking view with multiple buggies on campus map*
+
+![User Authentication](https://via.placeholder.com/800x450?text=Authentication)
+*User login and registration screens*
+
+### Demo Video
+
+[![Campus Buggy Tracker Demo](https://via.placeholder.com/800x450?text=Video+Thumbnail)](https://youtu.be/your-demo-video-link)
+
+*Click the image above to watch a walkthrough of the Campus Buggy Tracker application*
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contact
+
+Project Maintainer - [Your Name](mailto:your.email@example.com)
+
+Project Link: [https://github.com/your-username/campus-buggy-tracker](https://github.com/your-username/campus-buggy-tracker)
+
+---
+
+Built with ❤️ for improving campus transportation
