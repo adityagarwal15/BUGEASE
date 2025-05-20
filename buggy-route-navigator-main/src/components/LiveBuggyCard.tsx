@@ -11,7 +11,7 @@ interface Buggy {
   name: string;
   driverName: string;
   status: "available" | "busy" | "offline" | "maintenance";
-  lastLocation: string;
+  lastLocation?: string; // Make lastLocation optional
   lastUpdated: Date;
   location?: { lat: number; lng: number };
   capacity: number;
@@ -77,7 +77,7 @@ const LiveBuggyCard: React.FC<LiveBuggyCardProps> = ({ buggy, onSelect, selected
               <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>Location</span>
             </div>
-            <span className="font-medium">{buggy.lastLocation}</span>
+            <span className="font-medium">{buggy.lastLocation || "Unknown"}</span>
           </div>
         </div>
 

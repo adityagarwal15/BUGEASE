@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +28,7 @@ import Terms from "./pages/Terms";
 import AdminAuth from "./components/AdminAuth";
 import { useEffect } from "react";
 import { authService } from "./services/authService";
+import ChatbotLoader from "./components/ChatbotLoader";
 
 // Import driver pages
 import DriverDashboard from "./pages/driver/Dashboard";
@@ -314,6 +314,7 @@ const App = () => {
               </AppLayout>
             } />
           </Routes>
+          <ChatbotLoader />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

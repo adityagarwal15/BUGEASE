@@ -15,10 +15,21 @@ import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
+// Helper function to adapt data buggies to the format LiveBuggyCard expects
+const adaptBuggyForCard = (buggy) => ({
+  ...buggy,
+  id: buggy.id.toString(),
+  lastLocation: "Campus Area", // Provide default lastLocation
+  driverName: buggy.driverName || "Unassigned",
+  status: buggy.status || "offline"
+});
+
 const BookRide = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const availableBuggies = mockBuggies.filter(buggy => buggy.status === "available");
+  const availableBuggies = mockBuggies
+    .filter(buggy => buggy.status === "available")
+    .map(adaptBuggyForCard); // Transform buggies to match LiveBuggyCard's expectations
   
   const [bookingStep, setBookingStep] = useState<1|2|3>(1);
   const [pickup, setPickup] = useState('');
@@ -173,7 +184,7 @@ const BookRide = () => {
         );
       
       case 3:
-        const selectedBuggyData = mockBuggies.find(b => b.id === selectedBuggy);
+        const selectedBuggyData = availableBuggies.find(b => b.id === selectedBuggy);
         const pickupLocation = campusLocations.find(loc => loc.name === pickup);
         const dropoffLocation = campusLocations.find(loc => loc.name === dropoff);
 

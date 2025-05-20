@@ -14,11 +14,11 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
   const { toast } = useToast();
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-
+  
   // Setup WebSocket connection
   useEffect(() => {
     if (!buggy) return;
-
+    
     const token = localStorage.getItem('authToken');
     if (!token) {
       toast({
@@ -28,22 +28,22 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
       });
       return;
     }
-
+    
     // Create WebSocket connection
-    const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates?token=${token}`);
-
+    const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates/?token=${token}`);
+    
     socket.onopen = () => {
       console.log('WebSocket connection established');
       setWebsocket(socket);
       setIsConnected(true);
     };
-
+    
     socket.onclose = (event) => {
       console.log('WebSocket connection closed:', event);
       setWebsocket(null);
       setIsConnected(false);
     };
-
+    
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
       toast({
@@ -52,19 +52,19 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
         variant: "destructive"
       });
     };
-
+    
     // Cleanup function
     return () => {
       socket.close();
     };
   }, [buggy, toast]);
-
+  
   // Handle GPS location tracking and sending updates
   useEffect(() => {
     if (!isRunning || !websocket || !buggy) return;
-
+    
     let watchId: number | null = null;
-
+    
     const startLocationTracking = () => {
       if (!navigator.geolocation) {
         toast({
@@ -74,15 +74,15 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
         });
         return;
       }
-
+      
       // Watch position and send updates
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-
+          
           // Calculate direction (heading) if available
           const direction = position.coords.heading || null;
-
+          
           // Send location update via WebSocket
           sendLocationUpdate(
             websocket,
@@ -91,7 +91,7 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
             longitude,
             direction
           );
-
+          
           console.log("Location sent:", latitude, longitude);
         },
         (error) => {
@@ -109,9 +109,9 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
         }
       );
     };
-
+    
     startLocationTracking();
-
+    
     // Cleanup function
     return () => {
       if (watchId !== null) {
@@ -119,8 +119,8 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
       }
     };
   }, [isRunning, websocket, buggy, toast]);
-
-  return {
+  
+  return { 
     isConnected
   };
 };
