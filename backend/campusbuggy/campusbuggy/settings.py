@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'tracking',
+    'chatbot',
     'corsheaders',
     'drf_yasg',
 ]

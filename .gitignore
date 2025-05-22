@@ -22,5 +22,10 @@ backend/.DS_Store
 # Don't commit collected static files
 backend/campusbuggy/staticfiles/
 
+# Environment variables
+backend/.env
+*.env
+.env
+
 # Node.js
 **/package-lock.json
