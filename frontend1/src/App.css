@@ -1,0 +1,79 @@
+
+/* Global styles for campus buggy tracking app */
+
+/* Dark theme base with purple/blue gradients */
+body {
+  background-color: #1a1a2e;
+  background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 100%);
+  color: #fff;
+}
+
+/* Hero gradient overlay */
+.hero-gradient-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(127, 90, 240, 0.1) 0%,
+    rgba(0, 209, 255, 0.1) 50%,
+    rgba(255, 92, 138, 0.05) 100%
+  );
+}
+
+/* Glow effects for buttons and cards */
+.glow-effect {
+  box-shadow: 0 0 15px rgba(127, 90, 240, 0.4);
+  transition: all 0.3s ease;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 25px rgba(0, 209, 255, 0.6);
+}
+
+/* Enhanced cards with glassmorphism */
+.premium-card {
+  background: rgba(26, 26, 46, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Text glowing effects */
+.glow-text {
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.5);
+}
+
+/* Enhanced animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(127, 90, 240, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 209, 255, 0.7); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Map customization */
+.map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 90, 240, 0.2);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 15, 30, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(127, 90, 240, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 209, 255, 0.5);
+}
