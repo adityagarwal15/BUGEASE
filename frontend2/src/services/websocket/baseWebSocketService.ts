@@ -14,15 +14,15 @@ export const createWebSocketConnection = (
   if (!token) {
     throw new Error('No authentication token found');
   }
-  
-  const wsUrl = `${WEBSOCKET_URL}/${endpoint}/?token=${token}`;
+
+  const wsUrl = `${WEBSOCKET_URL}/${endpoint}?token=${token}`;
   const socket = new WebSocket(wsUrl);
-  
+
   socket.onopen = () => {
     console.log(`WebSocket connection established to ${endpoint}`);
     if (onOpen) onOpen();
   };
-  
+
   socket.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
@@ -31,23 +31,23 @@ export const createWebSocketConnection = (
       console.error('Error parsing WebSocket message:', error);
     }
   };
-  
+
   socket.onclose = (event) => {
     console.log(`WebSocket connection closed: ${endpoint}`, event);
     if (onClose) onClose(event);
   };
-  
+
   socket.onerror = (error) => {
     console.error('WebSocket error:', error);
     if (onError) onError(error);
   };
-  
+
   return socket;
 };
 
 export const useBaseWebSocket = (endpoint: string) => {
   const { toast } = useToast();
-  
+
   const sendMessage = (socket: WebSocket | null, message: WebSocketMessage) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       toast({
@@ -57,7 +57,7 @@ export const useBaseWebSocket = (endpoint: string) => {
       });
       return false;
     }
-    
+
     try {
       socket.send(JSON.stringify(message));
       return true;
@@ -71,7 +71,7 @@ export const useBaseWebSocket = (endpoint: string) => {
       return false;
     }
   };
-  
+
   return {
     createConnection: (
       token: string | null,
