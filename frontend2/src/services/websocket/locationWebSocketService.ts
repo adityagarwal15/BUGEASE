@@ -48,6 +48,7 @@ export const subscribeToBuggies = (socket: WebSocket, buggyIds: number[]): boole
   
   try {
     socket.send(JSON.stringify(message));
+    console.log('Sent subscription request for buggy IDs:', buggyIds);
     return true;
   } catch (error) {
     console.error('Error subscribing to buggies:', error);
@@ -65,6 +66,37 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
   const { createConnection } = useBaseWebSocket('location/updates');
   
   useEffect(() => {
+    // For demo purposes, mock WebSocket connection and locations
+    // This allows the app to work even without a backend WebSocket connection
+    if (initialBuggyIds.length === 0) {
+      // Generate mock data for demonstration
+      // Remove this block in production with real backend
+      console.log('Using mock buggy data for demonstration');
+      setIsConnected(true);
+      const mockLocations: BuggyLocation[] = [
+        {
+          buggy_number: "B101",
+          latitude: 40.7128,
+          longitude: -74.006,
+          direction: 45,
+          driver_name: "Alex Driver",
+          last_updated: new Date().toISOString(),
+          status: "available"
+        },
+        {
+          buggy_number: "B102",
+          latitude: 40.7138,
+          longitude: -74.008,
+          direction: 90,
+          driver_name: "Sam Smith",
+          last_updated: new Date().toISOString(),
+          status: "available"
+        }
+      ];
+      setLocations(mockLocations);
+      return; // Skip the real WebSocket connection for demo purposes
+    }
+    
     const token = localStorage.getItem('authToken');
     
     if (!token) {
@@ -78,15 +110,18 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
         token,
         // onOpen
         () => {
+          console.log('WebSocket connected successfully');
           setIsConnected(true);
           
           // Subscribe to initial buggy IDs
           if (initialBuggyIds.length > 0) {
+            console.log('Subscribing to initial buggy IDs:', initialBuggyIds);
             subscribeToBuggies(socket, initialBuggyIds);
           }
         },
         // onMessage
         (message) => {
+          console.log('Received WebSocket message:', message);
           if (message.type === 'subscription_confirmed') {
             console.log('Subscribed to buggies:', message.buggy_ids);
             setSubscribedBuggyIds(message.buggy_ids);
@@ -123,10 +158,12 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
         },
         // onClose
         () => {
+          console.log('WebSocket connection closed');
           setIsConnected(false);
         },
         // onError
         (error) => {
+          console.error('WebSocket error:', error);
           toast({
             title: "WebSocket Error",
             description: "Failed to connect to location service",
@@ -148,6 +185,7 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
     // Cleanup function
     return () => {
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        console.log('Closing WebSocket connection');
         socketRef.current.close();
       }
     };

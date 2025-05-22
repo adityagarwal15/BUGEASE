@@ -201,7 +201,7 @@ const TrackingMap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] pb-6 hero-gradient-overlay">
+    <div className="min-h-screen bg-[#1a1a2e] pb-6 hero-gradient-overlay pt-16">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight gradient-text">Live Campus Map</h1>

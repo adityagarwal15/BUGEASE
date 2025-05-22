@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { API_BASE_URL } from "@/config";
 
@@ -15,6 +14,7 @@ export interface RegisterCredentials {
   password: string;
   first_name: string; // Added first_name field
   last_name: string;  // Added last_name field
+  phone_number: string; // Added phone_number field
 }
 
 export interface UserProfile {

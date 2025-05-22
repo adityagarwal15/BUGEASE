@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Send, Maximize, Minimize, Bot } from 'lucide-react';
@@ -8,7 +7,7 @@ import QuickReplyButtons from './QuickReplyButtons';
 import TypingIndicator from './TypingIndicator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { playNotificationSound } from '@/utils/soundNotification';
-import { useChatGptAPI } from '@/hooks/useChatGptAPI';
+import { useGeminiAPI } from '@/hooks/useGeminiAPI';
 
 export interface Message {
   id: string;
@@ -38,7 +37,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { generateResponse, isLoading } = useChatGptAPI();
+  const { generateResponse, isLoading } = useGeminiAPI();
   
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -90,7 +89,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     setIsBotTyping(true);
     
     try {
-      // Use the generateResponse function from useChatGptAPI hook
+      // Use the generateResponse function from useGeminiAPI hook
       const botResponse = await generateResponse(userMessage);
       
       // Hide typing indicator
@@ -180,7 +179,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     }}>
       <SheetContent 
         side="right" 
-        className={`p-0 border-none overflow-hidden ${isFullscreen ? 'w-full h-full' : 'w-[90%] max-w-[400px] sm:w-[400px] h-[600px] max-h-[80vh]'} rounded-xl bg-gradient-to-br from-slate-950/90 to-slate-900/90 shadow-2xl backdrop-blur-xl border border-white/10`}
+        className={`p-0 border-none overflow-hidden ${
+          isFullscreen 
+            ? 'w-full h-full' 
+            : 'w-[90%] max-w-[400px] sm:w-[400px] h-[600px] max-h-[80vh]'
+        } rounded-xl bg-gradient-to-br from-slate-950/90 to-slate-900/90 shadow-2xl backdrop-blur-xl border border-white/10 z-50`}
       >
         {/* Chat header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/30 backdrop-blur-md">

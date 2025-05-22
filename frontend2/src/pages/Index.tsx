@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import NavbarHome from '@/components/NavbarHome';
 import { CompassIcon, MapPin, Calendar, Clock, Users, ArrowRight, CheckCircle, Map, Smartphone, Sparkles, User } from 'lucide-react';
+import { GOOGLE_MAPS_API_KEY } from '@/config';
 
 const Index = () => {
   // Refs for animation targets
@@ -118,8 +119,8 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce-soft">
+        {/* Scroll indicator - FIXED: moved down and centered properly */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce-soft">
           <span className="text-white/50 text-sm mb-2">Scroll to explore</span>
           <div className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center">
             <div className="w-1.5 h-3 bg-white/50 rounded-full mt-2 animate-pulse-slow"></div>
@@ -127,7 +128,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Map Preview Section */}
+      {/* Map Preview Section - UPDATED: Using the same Google Maps API key */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a2e]/50 via-transparent to-[#1a1a2e]/50"></div>
         
@@ -143,7 +144,7 @@ const Index = () => {
           
           <div className="glass-panel rounded-2xl overflow-hidden relative max-w-5xl mx-auto shadow-[0_0_30px_rgba(0,209,255,0.1)]">
             <div className="aspect-w-16 aspect-h-9 w-full">
-              <div className="w-full h-full bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=14&size=1200x600&style=element:geometry%7Ccolor:0x1a1a2e&style=element:labels.text%7Cvisibility:off&style=feature:administrative%7Celement:geometry%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:road%7Celement:geometry%7Ccolor:0x7f5af0&style=feature:transit%7Cvisibility:off&style=feature:water%7Celement:geometry%7Ccolor:0x00d1ff&key=AIzaSyCvpLcAoYsmush67jtucnbw_hwoz3Csvpo')] bg-cover bg-center relative">
+              <div className="w-full h-full bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=14&size=1200x600&style=element:geometry%7Ccolor:0x1a1a2e&style=element:labels.text%7Cvisibility:off&style=feature:administrative%7Celement:geometry%7Cvisibility:off&style=feature:poi%7Cvisibility:off&style=feature:road%7Celement:geometry%7Ccolor:0x7f5af0&style=feature:transit%7Cvisibility:off&style=feature:water%7Celement:geometry%7Ccolor:0x00d1ff&key=' + GOOGLE_MAPS_API_KEY + '')] bg-cover bg-center relative">
                 {/* Animated pulsing buggy markers */}
                 <div className="absolute h-6 w-6 top-1/4 left-1/3 transform -translate-x-1/2 -translate-y-1/2">
                   <div className="absolute inset-0 bg-[#7f5af0] rounded-full animate-ping opacity-75"></div>
@@ -291,7 +292,7 @@ const Index = () => {
               <div className="mt-10">
                 <Link to="/signup">
                   <Button 
-                    className="bg-gradient-to-r from-[#7f5af0] via-[#00d1ff] to-[#ff5c8a] hover:opacity-90 text-white border-0 shadow-lg"
+                    className="bg-gradient-to-r from-[#7f5af0] via-[#00d1ff] to-[#ff5c8a] hover:opacity-90 text-white border-0"
                   >
                     Get Started Now
                   </Button>

@@ -38,9 +38,10 @@ const ChatbotLoader: React.FC = () => {
       ) : (
         <Button
           onClick={() => setIsChatOpen(true)}
-          className="h-12 w-12 rounded-full bg-gradient-to-r from-[#7f5af0] to-[#00d1ff] hover:opacity-90 transition-all duration-300 shadow-[0_0_15px_rgba(127,90,240,0.5)] p-0 flex items-center justify-center"
+          className="h-14 w-14 rounded-full bg-gradient-to-r from-[#7f5af0] to-[#00d1ff] hover:opacity-90 transition-all duration-300 shadow-[0_0_20px_rgba(127,90,240,0.5)] p-0 flex items-center justify-center"
+          aria-label="Open chat assistant"
         >
-          <MessageCircle className="h-5 w-5 text-white" />
+          <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       )}
     </div>
