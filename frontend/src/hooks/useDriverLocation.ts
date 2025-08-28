@@ -1,8 +1,7 @@
-
-import { useState, useEffect, useRef } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { sendLocationUpdate } from '@/services/websocketService';
-import { WEBSOCKET_URL } from '@/config';
+import { useState, useEffect, useRef } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { sendLocationUpdate } from "@/services/websocketService";
+import { WEBSOCKET_URL } from "@/config";
 
 interface BuggyDetails {
   id: number;
@@ -10,7 +9,10 @@ interface BuggyDetails {
   is_running: boolean;
 }
 
-export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean) => {
+export const useDriverLocation = (
+  buggy: BuggyDetails | null,
+  isRunning: boolean
+) => {
   const { toast } = useToast();
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -19,37 +21,39 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
   useEffect(() => {
     if (!buggy) return;
 
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (!token) {
       toast({
         title: "Authentication Error",
         description: "Please log in again to continue",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     // Create WebSocket connection
-    const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates?token=${token}`);
+    const socket = new WebSocket(
+      `${WEBSOCKET_URL}/location/updates?token=${token}`
+    );
 
     socket.onopen = () => {
-      console.log('WebSocket connection established');
+      console.log("WebSocket connection established");
       setWebsocket(socket);
       setIsConnected(true);
     };
 
-    socket.onclose = (event) => {
-      console.log('WebSocket connection closed:', event);
+    socket.onclose = event => {
+      console.log("WebSocket connection closed:", event);
       setWebsocket(null);
       setIsConnected(false);
     };
 
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
+    socket.onerror = error => {
+      console.error("WebSocket error:", error);
       toast({
         title: "Connection Error",
         description: "Failed to establish real-time connection",
-        variant: "destructive"
+        variant: "destructive",
       });
     };
 
@@ -70,14 +74,14 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
         toast({
           title: "Error",
           description: "Geolocation is not supported by your browser",
-          variant: "destructive"
+          variant: "destructive",
         });
         return;
       }
 
       // Watch position and send updates
       watchId = navigator.geolocation.watchPosition(
-        (position) => {
+        position => {
           const { latitude, longitude } = position.coords;
 
           // Calculate direction (heading) if available
@@ -94,18 +98,18 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
 
           console.log("Location sent:", latitude, longitude);
         },
-        (error) => {
+        error => {
           console.error("Geolocation error:", error);
           toast({
             title: "Location Error",
             description: `Could not access your location: ${error.message}`,
-            variant: "destructive"
+            variant: "destructive",
           });
         },
         {
           enableHighAccuracy: true,
           maximumAge: 0,
-          timeout: 5000
+          timeout: 5000,
         }
       );
     };
@@ -121,6 +125,6 @@ export const useDriverLocation = (buggy: BuggyDetails | null, isRunning: boolean
   }, [isRunning, websocket, buggy, toast]);
 
   return {
-    isConnected
+    isConnected,
   };
 };

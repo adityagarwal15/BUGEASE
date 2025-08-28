@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 interface BuggyMarkerProps {
   map?: google.maps.Map;
@@ -11,17 +10,19 @@ interface BuggyMarkerProps {
   isSelected?: boolean;
 }
 
-const BuggyMarkerOnMap = ({ 
-  map, 
-  position, 
-  buggyId, 
-  buggyName, 
-  status, 
+const BuggyMarkerOnMap = ({
+  map,
+  position,
+  buggyId,
+  buggyName,
+  status,
   onClick,
-  isSelected = false 
+  isSelected = false,
 }: BuggyMarkerProps) => {
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
-  const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+  const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(
+    null
+  );
 
   useEffect(() => {
     if (!map) return;
@@ -29,13 +30,17 @@ const BuggyMarkerOnMap = ({
     // Get color based on status
     const getMarkerColor = () => {
       switch (status) {
-        case 'available': return '#10B981'; // green
-        case 'busy': return '#F59E0B'; // amber
-        case 'maintenance': return '#EF4444'; // red
-        default: return '#6B7280'; // gray
+        case "available":
+          return "#10B981"; // green
+        case "busy":
+          return "#F59E0B"; // amber
+        case "maintenance":
+          return "#EF4444"; // red
+        default:
+          return "#6B7280"; // gray
       }
     };
-    
+
     const markerInstance = new google.maps.Marker({
       position,
       map,
@@ -45,10 +50,10 @@ const BuggyMarkerOnMap = ({
         path: google.maps.SymbolPath.CIRCLE,
         fillColor: getMarkerColor(),
         fillOpacity: 0.8,
-        strokeColor: isSelected ? '#FFFFFF' : getMarkerColor(),
+        strokeColor: isSelected ? "#FFFFFF" : getMarkerColor(),
         strokeWeight: isSelected ? 2 : 1,
-        scale: isSelected ? 10 : 8
-      }
+        scale: isSelected ? 10 : 8,
+      },
     });
 
     // Create info window content for this marker
@@ -62,43 +67,43 @@ const BuggyMarkerOnMap = ({
         </p>
       </div>
     `;
-    
+
     const infoWindowInstance = new google.maps.InfoWindow({
-      content: contentString
+      content: contentString,
     });
-    
+
     markerInstance.addListener("click", () => {
       if (onClick) onClick();
-      
+
       // Close all open info windows before opening this one
       if (map.get("openInfoWindow")) {
         (map.get("openInfoWindow") as google.maps.InfoWindow).close();
       }
-      
+
       infoWindowInstance.open({
         anchor: markerInstance,
-        map
+        map,
       });
-      
+
       // Store reference to currently open info window
       map.set("openInfoWindow", infoWindowInstance);
     });
-    
+
     // If selected, open the info window
     if (isSelected) {
       infoWindowInstance.open({
         anchor: markerInstance,
-        map
+        map,
       });
       map.set("openInfoWindow", infoWindowInstance);
-      
+
       // Center map on selected marker with animation
       map.panTo(position);
     }
 
     setMarker(markerInstance);
     setInfoWindow(infoWindowInstance);
-    
+
     return () => {
       if (markerInstance) markerInstance.setMap(null);
       if (infoWindowInstance) infoWindowInstance.close();
@@ -115,22 +120,32 @@ const BuggyMarkerOnMap = ({
   // Update selected state
   useEffect(() => {
     if (!marker) return;
-    
+
     marker.setAnimation(isSelected ? google.maps.Animation.BOUNCE : null);
-    
+
     marker.setIcon({
       path: google.maps.SymbolPath.CIRCLE,
-      fillColor: status === 'available' ? '#10B981' : 
-                status === 'busy' ? '#F59E0B' : 
-                status === 'maintenance' ? '#EF4444' : '#6B7280',
+      fillColor:
+        status === "available"
+          ? "#10B981"
+          : status === "busy"
+            ? "#F59E0B"
+            : status === "maintenance"
+              ? "#EF4444"
+              : "#6B7280",
       fillOpacity: 0.8,
-      strokeColor: isSelected ? '#FFFFFF' : status === 'available' ? '#10B981' : 
-                                  status === 'busy' ? '#F59E0B' : 
-                                  status === 'maintenance' ? '#EF4444' : '#6B7280',
+      strokeColor: isSelected
+        ? "#FFFFFF"
+        : status === "available"
+          ? "#10B981"
+          : status === "busy"
+            ? "#F59E0B"
+            : status === "maintenance"
+              ? "#EF4444"
+              : "#6B7280",
       strokeWeight: isSelected ? 2 : 1,
-      scale: isSelected ? 10 : 8
+      scale: isSelected ? 10 : 8,
     });
-    
   }, [marker, isSelected, status]);
 
   return null; // This component doesn't render any visible React elements

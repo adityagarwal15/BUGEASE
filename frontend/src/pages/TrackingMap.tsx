@@ -1,21 +1,24 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { mockPendingRide } from '@/data/buggies'; // Keeping mock ride data for now until we have a real ride API
-import LiveBuggyCard from '@/components/LiveBuggyCard';
-import RideStatusCard from '@/components/RideStatusCard';
-import { Eye, EyeOff, Layers, LucideIcon, MapPin, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import GoogleMapsLoader from '@/components/GoogleMapsLoader';
-import BuggyMarkerOnMap from '@/components/BuggyMarkerOnMap';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useWebSocketLocations } from '@/services/websocketService';
-import { trackingService, BuggyLocation } from '@/services/trackingService';
-import { authService } from '@/services/authService';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { mockPendingRide } from "@/data/buggies"; // Keeping mock ride data for now until we have a real ride API
+import LiveBuggyCard from "@/components/LiveBuggyCard";
+import RideStatusCard from "@/components/RideStatusCard";
+import { Eye, EyeOff, Layers, LucideIcon, MapPin, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import GoogleMapsLoader from "@/components/GoogleMapsLoader";
+import BuggyMarkerOnMap from "@/components/BuggyMarkerOnMap";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useWebSocketLocations } from "@/services/websocketService";
+import { trackingService, BuggyLocation } from "@/services/trackingService";
+import { authService } from "@/services/authService";
 
 interface MapLayer {
   id: string;
@@ -51,7 +54,7 @@ const TrackingMap = () => {
         const buggies = await trackingService.getAvailableBuggies();
         setAvailableBuggyIds(buggies.map(buggy => buggy.id));
       } catch (error) {
-        console.error('Error fetching available buggy IDs:', error);
+        console.error("Error fetching available buggy IDs:", error);
       }
     };
 
@@ -59,7 +62,8 @@ const TrackingMap = () => {
   }, []);
 
   // Get real-time driver locations from WebSocket
-  const { locations: wsLocations, isConnected } = useWebSocketLocations(availableBuggyIds);
+  const { locations: wsLocations, isConnected } =
+    useWebSocketLocations(availableBuggyIds);
 
   // Store all locations from both API and WebSocket
   const [allLocations, setAllLocations] = useState<BuggyLocation[]>([]);
@@ -79,12 +83,12 @@ const TrackingMap = () => {
         const locations = await trackingService.getLiveLocations();
         setAllLocations(locations);
       } catch (err) {
-        console.error('Error fetching locations:', err);
-        setError('Failed to load buggy locations. Please try again.');
+        console.error("Error fetching locations:", err);
+        setError("Failed to load buggy locations. Please try again.");
         toast({
           title: "Error loading locations",
           description: "Could not fetch buggy locations from server.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -119,10 +123,22 @@ const TrackingMap = () => {
   }, [wsLocations]);
 
   const [mapLayers, setMapLayers] = useState<MapLayer[]>([
-    { id: 'buggies', name: 'Buggies', active: true, icon: Eye },
-    { id: 'buildings', name: 'Buildings', active: false, icon: EyeOff, disabled: true },
-    { id: 'routes', name: 'Routes', active: true, icon: Eye },
-    { id: 'traffic', name: 'Traffic', active: false, icon: EyeOff, disabled: true },
+    { id: "buggies", name: "Buggies", active: true, icon: Eye },
+    {
+      id: "buildings",
+      name: "Buildings",
+      active: false,
+      icon: EyeOff,
+      disabled: true,
+    },
+    { id: "routes", name: "Routes", active: true, icon: Eye },
+    {
+      id: "traffic",
+      name: "Traffic",
+      active: false,
+      icon: EyeOff,
+      disabled: true,
+    },
   ]);
 
   const handleCancelRide = () => {
@@ -136,7 +152,11 @@ const TrackingMap = () => {
     setMapLayers(layers =>
       layers.map(layer =>
         layer.id === id && !layer.disabled
-          ? { ...layer, active: !layer.active, icon: layer.active ? EyeOff : Eye }
+          ? {
+              ...layer,
+              active: !layer.active,
+              icon: layer.active ? EyeOff : Eye,
+            }
           : layer
       )
     );
@@ -148,7 +168,9 @@ const TrackingMap = () => {
     if (buggy) {
       toast({
         title: `Selected ${buggy.buggy_number}`,
-        description: buggy.driver_name ? `Driver: ${buggy.driver_name}` : "No driver assigned",
+        description: buggy.driver_name
+          ? `Driver: ${buggy.driver_name}`
+          : "No driver assigned",
       });
     }
   };
@@ -160,17 +182,19 @@ const TrackingMap = () => {
       buggyName: location.buggy_number,
       position: {
         lat: location.latitude,
-        lng: location.longitude
+        lng: location.longitude,
       },
-      status: location.status || 'offline',
-      direction: location.direction || 0
+      status: location.status || "offline",
+      direction: location.direction || 0,
     }));
   };
 
   // Modify the getBuggyForCard function to ensure status is properly mapped to the expected type
   const getBuggyForCard = (location: BuggyLocation) => {
     // Map the API status string to one of our allowed status values
-    const mapStatus = (apiStatus?: string): "available" | "offline" | "busy" | "maintenance" => {
+    const mapStatus = (
+      apiStatus?: string
+    ): "available" | "offline" | "busy" | "maintenance" => {
       if (!apiStatus) return "offline";
 
       switch (apiStatus.toLowerCase()) {
@@ -189,14 +213,14 @@ const TrackingMap = () => {
       id: location.buggy_number,
       name: `Campus Cruiser ${location.buggy_number}`,
       status: mapStatus(location.status), // Apply the mapping function here
-      driverName: location.driver_name || 'Unassigned',
+      driverName: location.driver_name || "Unassigned",
       lastLocation: "Campus Area",
       location: {
         lat: location.latitude,
-        lng: location.longitude
+        lng: location.longitude,
       },
       capacity: 4, // Default capacity
-      lastUpdated: new Date(location.last_updated)
+      lastUpdated: new Date(location.last_updated),
     };
   };
 
@@ -204,7 +228,9 @@ const TrackingMap = () => {
     <div className="min-h-screen bg-background pb-6">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight gradient-text">Live Campus Map</h1>
+          <h1 className="text-3xl font-bold tracking-tight gradient-text">
+            Live Campus Map
+          </h1>
           <p className="text-muted-foreground mt-1">
             Track buggies and rides in real-time across campus
             {isConnected && <span className="text-green-500 ml-2">• Live</span>}
@@ -238,19 +264,25 @@ const TrackingMap = () => {
           {/* Left sidebar - Only visible on desktop */}
           {!isMobile && showSidePanels && (
             <div className="hidden lg:block lg:col-span-3 space-y-6">
-              <Collapsible open={isRidePanelOpen} onOpenChange={setIsRidePanelOpen}>
+              <Collapsible
+                open={isRidePanelOpen}
+                onOpenChange={setIsRidePanelOpen}
+              >
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
                     className="w-full flex justify-between items-center mb-2"
                   >
                     <span>Active Ride</span>
-                    <span>{isRidePanelOpen ? '−' : '+'}</span>
+                    <span>{isRidePanelOpen ? "−" : "+"}</span>
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="sticky top-24">
-                    <RideStatusCard ride={activeRide} onCancel={handleCancelRide} />
+                    <RideStatusCard
+                      ride={activeRide}
+                      onCancel={handleCancelRide}
+                    />
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -258,11 +290,13 @@ const TrackingMap = () => {
           )}
 
           {/* Map Container - Takes full width on mobile, center space on desktop */}
-          <div className={cn(
-            "lg:col-span-6",
-            !showSidePanels && "lg:col-span-12",
-            isMobile && !showSidePanels && "col-span-1"
-          )}>
+          <div
+            className={cn(
+              "lg:col-span-6",
+              !showSidePanels && "lg:col-span-12",
+              isMobile && !showSidePanels && "col-span-1"
+            )}
+          >
             <Card className="glass-panel h-[calc(100vh-200px)] md:h-[600px] w-full relative overflow-hidden border-primary/10">
               {/* Toggle Panels Button for Mobile */}
               {isMobile && (
@@ -282,8 +316,8 @@ const TrackingMap = () => {
                 center={CAMPUS_CENTER}
                 zoom={16}
               >
-                {mapLayers.find(l => l.id === 'buggies')?.active &&
-                  transformLocationsForMap(allLocations).map((buggy) => (
+                {mapLayers.find(l => l.id === "buggies")?.active &&
+                  transformLocationsForMap(allLocations).map(buggy => (
                     <BuggyMarkerOnMap
                       key={buggy.buggyId}
                       buggyId={buggy.buggyId}
@@ -293,8 +327,7 @@ const TrackingMap = () => {
                       onClick={() => handleBuggySelect(buggy.buggyId)}
                       isSelected={selectedBuggyId === buggy.buggyId}
                     />
-                  ))
-                }
+                  ))}
               </GoogleMapsLoader>
 
               {/* WebSocket Connection Status */}
@@ -313,14 +346,20 @@ const TrackingMap = () => {
               </div>
 
               {/* Map Controls */}
-              <div className={`absolute top-4 right-4 transition-all duration-300 ${showControls ? 'translate-x-0' : 'translate-x-full'}`}>
+              <div
+                className={`absolute top-4 right-4 transition-all duration-300 ${showControls ? "translate-x-0" : "translate-x-full"}`}
+              >
                 <Button
                   size="sm"
                   variant="outline"
                   className="absolute -left-12 bg-card/80 backdrop-blur-sm border border-border shadow-md"
                   onClick={() => setShowControls(!showControls)}
                 >
-                  {showControls ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showControls ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
 
                 <Card className="glass-panel w-[220px] shadow-lg">
@@ -335,13 +374,17 @@ const TrackingMap = () => {
                         key={layer.id}
                         variant={layer.active ? "secondary" : "outline"}
                         size="sm"
-                        className={`w-full justify-start text-xs h-8 ${layer.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full justify-start text-xs h-8 ${layer.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                         onClick={() => toggleLayer(layer.id)}
                         disabled={layer.disabled}
                       >
                         <layer.icon className="mr-2 h-3.5 w-3.5" />
                         {layer.name}
-                        {layer.disabled && <span className="ml-auto text-xs text-muted-foreground">(Disabled)</span>}
+                        {layer.disabled && (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            (Disabled)
+                          </span>
+                        )}
                       </Button>
                     ))}
                   </CardContent>
@@ -364,18 +407,24 @@ const TrackingMap = () => {
             {/* Mobile: Active Ride Panel (only shown when panels are visible) */}
             {isMobile && showSidePanels && (
               <div className="mt-6">
-                <Collapsible open={isRidePanelOpen} onOpenChange={setIsRidePanelOpen}>
+                <Collapsible
+                  open={isRidePanelOpen}
+                  onOpenChange={setIsRidePanelOpen}
+                >
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
                       className="w-full flex justify-between items-center mb-2"
                     >
                       <span>Active Ride</span>
-                      <span>{isRidePanelOpen ? '−' : '+'}</span>
+                      <span>{isRidePanelOpen ? "−" : "+"}</span>
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <RideStatusCard ride={activeRide} onCancel={handleCancelRide} />
+                    <RideStatusCard
+                      ride={activeRide}
+                      onCancel={handleCancelRide}
+                    />
                   </CollapsibleContent>
                 </Collapsible>
               </div>
@@ -383,15 +432,20 @@ const TrackingMap = () => {
           </div>
 
           {/* Right sidebar - Only visible on desktop or mobile when panels are shown */}
-          <div className={cn(
-            "lg:col-span-3",
-            !showSidePanels && "hidden lg:hidden",
-            isMobile && !showSidePanels && "hidden"
-          )}>
+          <div
+            className={cn(
+              "lg:col-span-3",
+              !showSidePanels && "hidden lg:hidden",
+              isMobile && !showSidePanels && "hidden"
+            )}
+          >
             <Card className="glass-panel sticky top-24">
               <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm">Available Buggies</CardTitle>
-                <Link to="/book" className="text-xs text-primary hover:underline flex items-center">
+                <Link
+                  to="/book"
+                  className="text-xs text-primary hover:underline flex items-center"
+                >
                   Book a Ride
                 </Link>
               </CardHeader>
@@ -408,17 +462,22 @@ const TrackingMap = () => {
                         <LiveBuggyCard
                           key={location.buggy_number}
                           buggy={getBuggyForCard(location)}
-                          onSelect={() => handleBuggySelect(location.buggy_number)}
+                          onSelect={() =>
+                            handleBuggySelect(location.buggy_number)
+                          }
                           selected={selectedBuggyId === location.buggy_number}
                         />
-                      ))
-                    }
+                      ))}
                   </div>
                 ) : (
                   <div className="py-8 text-center">
                     <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                    <p className="text-muted-foreground">No buggies available</p>
-                    <p className="text-xs text-muted-foreground mt-1">Check back later or refresh</p>
+                    <p className="text-muted-foreground">
+                      No buggies available
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Check back later or refresh
+                    </p>
                   </div>
                 )}
               </CardContent>

@@ -1,4 +1,3 @@
-
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,12 +29,13 @@ const NotFound = () => {
             <span className="text-3xl font-bold">404</span>
           </div>
         </div>
-        
+
         <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
         <p className="text-muted-foreground mb-8">
-          We couldn't find the page you're looking for. The buggy might have taken a wrong turn!
+          We couldn't find the page you're looking for. The buggy might have
+          taken a wrong turn!
         </p>
-        
+
         <Link to="/">
           <Button className="flex items-center">
             <MoveLeft className="mr-2 h-4 w-4" />

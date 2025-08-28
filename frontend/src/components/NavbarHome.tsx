@@ -1,13 +1,12 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { MapPin, LogIn, UserPlus, User } from 'lucide-react';
-import { authService } from '@/services/authService';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { MapPin, LogIn, UserPlus, User } from "lucide-react";
+import { authService } from "@/services/authService";
 
 const NavbarHome = () => {
   const isAuthenticated = authService.isAuthenticated();
-  
+
   return (
     <div className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-40 w-full">
       <div className="container mx-auto px-4 py-3">
@@ -19,23 +18,36 @@ const NavbarHome = () => {
             </div>
             <span className="font-bold text-xl text-glow">CampusBuggy</span>
           </Link>
-          
+
           {/* Navigation Links - Desktop */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/tracking" className="text-foreground hover:text-primary transition-colors">
+            <Link
+              to="/tracking"
+              className="text-foreground hover:text-primary transition-colors"
+            >
               Live Map
             </Link>
-            <Link to="/book" className="text-foreground hover:text-primary transition-colors">
+            <Link
+              to="/book"
+              className="text-foreground hover:text-primary transition-colors"
+            >
               Book Ride
             </Link>
-            <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
+            <Link
+              to="/dashboard"
+              className="text-foreground hover:text-primary transition-colors"
+            >
               Dashboard
             </Link>
             <div className="border-l border-border/60 h-6"></div>
-            
+
             {isAuthenticated ? (
               <Link to="/profile">
-                <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
                   <User className="h-4 w-4" />
                   <span>Profile</span>
                 </Button>
@@ -43,7 +55,11 @@ const NavbarHome = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
                     <LogIn className="h-4 w-4" />
                     <span>Sign in</span>
                   </Button>
@@ -57,7 +73,7 @@ const NavbarHome = () => {
               </>
             )}
           </div>
-          
+
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             {isAuthenticated ? (
@@ -74,9 +90,7 @@ const NavbarHome = () => {
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button size="sm">
-                    Sign up
-                  </Button>
+                  <Button size="sm">Sign up</Button>
                 </Link>
               </>
             )}

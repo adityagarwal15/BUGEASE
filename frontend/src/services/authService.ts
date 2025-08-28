@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { API_BASE_URL } from "@/config";
 
@@ -6,7 +5,7 @@ import { API_BASE_URL } from "@/config";
 export interface LoginCredentials {
   username: string;
   password: string;
-  userType?: 'student' | 'driver'; // Added user type for login
+  userType?: "student" | "driver"; // Added user type for login
 }
 
 export interface RegisterCredentials {
@@ -14,157 +13,161 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   first_name: string; // Added first_name field
-  last_name: string;  // Added last_name field
+  last_name: string; // Added last_name field
 }
 
 export interface UserProfile {
   id: number;
   username: string;
   email: string;
-  user_type: 'student' | 'driver';
+  user_type: "student" | "driver";
   first_name: string; // Added first_name field
-  last_name: string;  // Added last_name field
+  last_name: string; // Added last_name field
 }
 
 // Authentication service functions
 export const authService = {
   // Login user and get token
-  login: async (credentials: LoginCredentials): Promise<{token: string, userType: 'student' | 'driver'}> => {
+  login: async (
+    credentials: LoginCredentials
+  ): Promise<{ token: string; userType: "student" | "driver" }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/login/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify(credentials),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || "Login failed");
       }
-      
+
       // Store token and user type in localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userType', data.user_type); // Store user type
-      
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userType", data.user_type); // Store user type
+
       return {
         token: data.token,
-        userType: data.user_type
+        userType: data.user_type,
       };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     }
   },
-  
+
   // Register new user (students only)
-  register: async (credentials: RegisterCredentials): Promise<{token: string, userType: 'student'}> => {
+  register: async (
+    credentials: RegisterCredentials
+  ): Promise<{ token: string; userType: "student" }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/register/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(credentials) // Now includes first_name and last_name
+        body: JSON.stringify(credentials), // Now includes first_name and last_name
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.error || "Registration failed");
       }
-      
+
       // Store token and user type in localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userType', 'student'); // Students only for registration
-      
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userType", "student"); // Students only for registration
+
       return {
         token: data.token,
-        userType: 'student' // Students only for registration
+        userType: "student", // Students only for registration
       };
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       throw error;
     }
   },
-  
+
   // Logout user
   logout: async (): Promise<void> => {
-    const token = localStorage.getItem('authToken');
-    
+    const token = localStorage.getItem("authToken");
+
     if (!token) {
       return;
     }
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/user/logout/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Token ${token}`
-        }
+          Authorization: `Token ${token}`,
+        },
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Logout failed');
+        throw new Error(data.error || "Logout failed");
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // Clear local storage regardless of server response
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('userType');
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userType");
     }
   },
-  
+
   // Get user profile
   getProfile: async (): Promise<UserProfile> => {
-    const token = localStorage.getItem('authToken');
-    
+    const token = localStorage.getItem("authToken");
+
     if (!token) {
-      throw new Error('No authentication token found');
+      throw new Error("No authentication token found");
     }
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/user/profile/`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Token ${token}`
-        }
+          Authorization: `Token ${token}`,
+        },
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch profile');
+        throw new Error(data.error || "Failed to fetch profile");
       }
-      
+
       return data;
     } catch (error) {
-      console.error('Profile fetch error:', error);
+      console.error("Profile fetch error:", error);
       throw error;
     }
   },
-  
+
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return localStorage.getItem('authToken') !== null;
+    return localStorage.getItem("authToken") !== null;
   },
-  
+
   // Get authentication token
   getToken: (): string | null => {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem("authToken");
   },
 
   // Get user type (student or driver)
-  getUserType: (): 'student' | 'driver' | null => {
-    const userType = localStorage.getItem('userType');
-    if (userType === 'student' || userType === 'driver') {
+  getUserType: (): "student" | "driver" | null => {
+    const userType = localStorage.getItem("userType");
+    if (userType === "student" || userType === "driver") {
       return userType;
     }
     return null;
@@ -172,27 +175,27 @@ export const authService = {
 
   // Check if current user is a driver
   isDriver: (): boolean => {
-    return localStorage.getItem('userType') === 'driver';
+    return localStorage.getItem("userType") === "driver";
   },
 
   // Check if current user is a student
   isStudent: (): boolean => {
-    return localStorage.getItem('userType') === 'student';
-  }
+    return localStorage.getItem("userType") === "student";
+  },
 };
 
 // Custom hook for authentication
 export const useAuth = () => {
   const { toast } = useToast();
-  
+
   const handleAuthError = (error: any) => {
     toast({
       title: "Authentication Error",
       description: error.message || "An error occurred during authentication",
-      variant: "destructive"
+      variant: "destructive",
     });
   };
-  
+
   return {
     login: async (credentials: LoginCredentials) => {
       try {
@@ -230,6 +233,6 @@ export const useAuth = () => {
     getToken: authService.getToken,
     getUserType: authService.getUserType,
     isDriver: authService.isDriver,
-    isStudent: authService.isStudent
+    isStudent: authService.isStudent,
   };
 };

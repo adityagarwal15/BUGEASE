@@ -1,46 +1,48 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Mail, Phone, Clock, Send } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import GoogleMapsLoader from '@/components/GoogleMapsLoader';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Mail, Phone, Clock, Send } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import GoogleMapsLoader from "@/components/GoogleMapsLoader";
 
 const Contact = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     setTimeout(() => {
       toast({
         title: "Message sent successfully!",
-        description: "We've received your message and will get back to you soon.",
+        description:
+          "We've received your message and will get back to you soon.",
       });
       setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
       });
       setIsSubmitting(false);
     }, 1500);
@@ -57,12 +59,12 @@ const Contact = () => {
       title: "CampusBuggy Office",
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: '#9b87f5',
+        fillColor: "#9b87f5",
         fillOpacity: 0.8,
-        strokeColor: '#9b87f5',
+        strokeColor: "#9b87f5",
         strokeWeight: 1,
-        scale: 10
-      }
+        scale: 10,
+      },
     });
 
     // Add info window to the marker
@@ -74,15 +76,15 @@ const Contact = () => {
     `;
 
     const infoWindow = new google.maps.InfoWindow({
-      content: contentString
+      content: contentString,
     });
 
     map.setZoom(15); // Set appropriate zoom level
-    
+
     // Fix: Use the correct open options format
     infoWindow.open({
       anchor: marker,
-      map: map
+      map: map,
     });
   };
 
@@ -96,7 +98,7 @@ const Contact = () => {
           </p>
         </div>
       </div>
-      
+
       <div className="container mx-auto px-4 py-16 -mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Contact Information */}
@@ -113,12 +115,13 @@ const Contact = () => {
                   <div>
                     <h3 className="font-medium">Address</h3>
                     <p className="text-muted-foreground">
-                      123 University Drive<br />
+                      123 University Drive
+                      <br />
                       Campus Area, CA 90210
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-4">
                   <div className="bg-primary/10 p-3 rounded-full">
                     <Phone className="h-5 w-5 text-primary" />
@@ -126,13 +129,16 @@ const Contact = () => {
                   <div>
                     <h3 className="font-medium">Phone</h3>
                     <p className="text-muted-foreground">
-                      <a href="tel:+1-800-123-4567" className="hover:text-primary transition-colors">
+                      <a
+                        href="tel:+1-800-123-4567"
+                        className="hover:text-primary transition-colors"
+                      >
                         +1 (800) 123-4567
                       </a>
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-4">
                   <div className="bg-primary/10 p-3 rounded-full">
                     <Mail className="h-5 w-5 text-primary" />
@@ -140,13 +146,16 @@ const Contact = () => {
                   <div>
                     <h3 className="font-medium">Email</h3>
                     <p className="text-muted-foreground">
-                      <a href="mailto:info@campusbuggy.com" className="hover:text-primary transition-colors">
+                      <a
+                        href="mailto:info@campusbuggy.com"
+                        className="hover:text-primary transition-colors"
+                      >
                         info@campusbuggy.com
                       </a>
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-4">
                   <div className="bg-primary/10 p-3 rounded-full">
                     <Clock className="h-5 w-5 text-primary" />
@@ -154,14 +163,15 @@ const Contact = () => {
                   <div>
                     <h3 className="font-medium">Operating Hours</h3>
                     <p className="text-muted-foreground">
-                      Monday - Friday: 7:00 AM - 10:00 PM<br />
+                      Monday - Friday: 7:00 AM - 10:00 PM
+                      <br />
                       Saturday - Sunday: 9:00 AM - 8:00 PM
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
+
             <div className="bg-muted p-6 rounded-lg">
               <h3 className="text-lg font-medium mb-2">Quick Support</h3>
               <p className="text-muted-foreground mb-4">
@@ -172,7 +182,7 @@ const Contact = () => {
               </Button>
             </div>
           </div>
-          
+
           {/* Contact Form */}
           <div>
             <Card>
@@ -182,22 +192,29 @@ const Contact = () => {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="name" className="block text-sm font-medium">Name</label>
-                    <Input 
-                      id="name" 
-                      name="name" 
+                    <label htmlFor="name" className="block text-sm font-medium">
+                      Name
+                    </label>
+                    <Input
+                      id="name"
+                      name="name"
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="Your name"
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <label htmlFor="email" className="block text-sm font-medium">Email</label>
-                    <Input 
-                      id="email" 
-                      name="email" 
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium"
+                    >
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
@@ -205,11 +222,16 @@ const Contact = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <label htmlFor="subject" className="block text-sm font-medium">Subject</label>
-                    <Input 
-                      id="subject" 
+                    <label
+                      htmlFor="subject"
+                      className="block text-sm font-medium"
+                    >
+                      Subject
+                    </label>
+                    <Input
+                      id="subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
@@ -217,11 +239,16 @@ const Contact = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <label htmlFor="message" className="block text-sm font-medium">Message</label>
-                    <Textarea 
-                      id="message" 
+                    <label
+                      htmlFor="message"
+                      className="block text-sm font-medium"
+                    >
+                      Message
+                    </label>
+                    <Textarea
+                      id="message"
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
@@ -230,17 +257,33 @@ const Contact = () => {
                       required
                     />
                   </div>
-                  
-                  <Button 
-                    type="submit" 
+
+                  <Button
+                    type="submit"
                     className="w-full"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Sending...
                       </span>
@@ -256,7 +299,7 @@ const Contact = () => {
             </Card>
           </div>
         </div>
-        
+
         {/* Map using the GoogleMapsLoader component from the tracking page */}
         <div className="mt-16 rounded-lg overflow-hidden h-80 bg-muted">
           <GoogleMapsLoader

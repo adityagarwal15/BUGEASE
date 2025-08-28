@@ -1,20 +1,25 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useToast } from '@/components/ui/use-toast';
-import { Camera, X } from 'lucide-react';
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/components/ui/use-toast";
+import { Camera, X } from "lucide-react";
 
 interface ProfileEditorProps {
   userData: {
@@ -34,45 +39,61 @@ interface ProfileEditorProps {
 }
 
 const departments = [
-  { id: 'eng', name: 'Engineering' },
-  { id: 'sci', name: 'Science' },
-  { id: 'bus', name: 'Business' },
-  { id: 'art', name: 'Arts & Humanities' },
-  { id: 'med', name: 'Medicine' },
-  { id: 'law', name: 'Law' },
+  { id: "eng", name: "Engineering" },
+  { id: "sci", name: "Science" },
+  { id: "bus", name: "Business" },
+  { id: "art", name: "Arts & Humanities" },
+  { id: "med", name: "Medicine" },
+  { id: "law", name: "Law" },
 ];
 
-const languages = ['English', 'Spanish', 'French', 'Chinese', 'Arabic', 'German', 'Japanese'];
-const notificationOptions = ['Email', 'Push', 'SMS', 'None'];
+const languages = [
+  "English",
+  "Spanish",
+  "French",
+  "Chinese",
+  "Arabic",
+  "German",
+  "Japanese",
+];
+const notificationOptions = ["Email", "Push", "SMS", "None"];
 
-const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCancel }) => {
+const ProfileEditor: React.FC<ProfileEditorProps> = ({
+  userData,
+  onSave,
+  onCancel,
+}) => {
   const [formData, setFormData] = useState({ ...userData });
-  const [imagePreview, setImagePreview] = useState<string | null>(userData.profilePicture || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    userData.profilePicture || null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
     setFormData({
       ...formData,
       [name]: value,
     });
   };
-  
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
-        
+
         // In a real app, you would upload this file to a storage service
         // For now, we'll just store the data URL
         setFormData({
@@ -83,7 +104,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
       reader.readAsDataURL(file);
     }
   };
-  
+
   const clearImage = () => {
     setImagePreview(null);
     setFormData({
@@ -91,17 +112,17 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
       profilePicture: undefined,
     });
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       onSave(formData);
-      
+
       toast({
         title: "Profile updated successfully",
         description: "Your profile information has been saved.",
@@ -116,7 +137,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -164,7 +185,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Personal Information */}
             <div className="space-y-4">
@@ -178,7 +199,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -190,7 +211,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
@@ -201,18 +222,20 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="department">Department</Label>
                 <Select
-                  value={formData.departmentId || ''}
-                  onValueChange={(value) => handleSelectChange('departmentId', value)}
+                  value={formData.departmentId || ""}
+                  onValueChange={value =>
+                    handleSelectChange("departmentId", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map((dept) => (
+                    {departments.map(dept => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}
                       </SelectItem>
@@ -221,7 +244,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                 </Select>
               </div>
             </div>
-            
+
             {/* Additional Information */}
             <div className="space-y-4">
               <div className="space-y-2">
@@ -229,32 +252,34 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                 <Input
                   id="address"
                   name="address"
-                  value={formData.address || ''}
+                  value={formData.address || ""}
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="studentId">Student ID</Label>
                 <Input
                   id="studentId"
                   name="studentId"
-                  value={formData.studentId || ''}
+                  value={formData.studentId || ""}
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="preferredLanguage">Preferred Language</Label>
                 <Select
-                  value={formData.preferredLanguage || 'English'}
-                  onValueChange={(value) => handleSelectChange('preferredLanguage', value)}
+                  value={formData.preferredLanguage || "English"}
+                  onValueChange={value =>
+                    handleSelectChange("preferredLanguage", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {languages.map((lang) => (
+                    {languages.map(lang => (
                       <SelectItem key={lang} value={lang}>
                         {lang}
                       </SelectItem>
@@ -262,18 +287,22 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="notificationPreference">Notification Preference</Label>
+                <Label htmlFor="notificationPreference">
+                  Notification Preference
+                </Label>
                 <Select
-                  value={formData.notificationPreference || 'Email'}
-                  onValueChange={(value) => handleSelectChange('notificationPreference', value)}
+                  value={formData.notificationPreference || "Email"}
+                  onValueChange={value =>
+                    handleSelectChange("notificationPreference", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select preference" />
                   </SelectTrigger>
                   <SelectContent>
-                    {notificationOptions.map((option) => (
+                    {notificationOptions.map(option => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
@@ -283,34 +312,31 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ userData, onSave, onCance
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
               name="bio"
-              value={formData.bio || ''}
+              value={formData.bio || ""}
               onChange={handleChange}
               placeholder="A short description about yourself"
               rows={4}
             />
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex justify-end space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Saving...' : 'Save Changes'}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </CardFooter>
       </form>

@@ -1,4 +1,3 @@
-
 /// <reference types="google.maps" />
 
 declare global {
@@ -83,12 +82,12 @@ declare global {
         BACKWARD_CLOSED_ARROW,
         FORWARD_CLOSED_ARROW,
         BACKWARD_OPEN_ARROW,
-        FORWARD_OPEN_ARROW
+        FORWARD_OPEN_ARROW,
       }
 
       enum Animation {
         BOUNCE,
-        DROP
+        DROP,
       }
 
       interface MapsEventListener {

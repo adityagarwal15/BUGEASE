@@ -1,16 +1,24 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { User } from 'lucide-react';
-import { UserProfile } from '@/services/authService';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { User } from "lucide-react";
+import { UserProfile } from "@/services/authService";
 
 interface DriverProfileCardProps {
   profile: UserProfile | null;
   loading: boolean;
 }
 
-const DriverProfileCard: React.FC<DriverProfileCardProps> = ({ profile, loading }) => {
+const DriverProfileCard: React.FC<DriverProfileCardProps> = ({
+  profile,
+  loading,
+}) => {
   return (
     <Card className="glass-panel">
       <CardHeader>
@@ -35,7 +43,7 @@ const DriverProfileCard: React.FC<DriverProfileCardProps> = ({ profile, loading 
                 <p className="text-sm text-muted-foreground">{profile.email}</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">User Type</span>

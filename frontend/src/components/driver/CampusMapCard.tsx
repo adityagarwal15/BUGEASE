@@ -1,8 +1,13 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CampusMapCardProps {
   isRunning: boolean;
@@ -21,7 +26,10 @@ const CampusMapCard: React.FC<CampusMapCardProps> = ({ isRunning }) => {
             <div className="text-center">
               <MapPin className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium">Live location broadcasting</p>
-              <Link to="/tracking" className="text-xs text-primary hover:underline">
+              <Link
+                to="/tracking"
+                className="text-xs text-primary hover:underline"
+              >
                 View full tracking map
               </Link>
             </div>

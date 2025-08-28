@@ -1,11 +1,10 @@
-
-import { useEffect, useRef, useState } from 'react';
-import { WEBSOCKET_URL } from '@/config';
-import { BuggyLocation } from './trackingService';
+import { useEffect, useRef, useState } from "react";
+import { WEBSOCKET_URL } from "@/config";
+import { BuggyLocation } from "./trackingService";
 
 // Types
 interface LocationUpdate {
-  type: 'location_update';
+  type: "location_update";
   buggy_id: number;
   latitude: number;
   longitude: number;
@@ -15,7 +14,7 @@ interface LocationUpdate {
 }
 
 interface SubscriptionConfirmed {
-  type: 'subscription_confirmed';
+  type: "subscription_confirmed";
   buggy_ids: number[];
 }
 
@@ -24,21 +23,23 @@ type WebSocketMessage = LocationUpdate | SubscriptionConfirmed;
 // WebSocket service for real-time updates
 export const createWebSocketConnection = (token: string | null) => {
   if (!token) {
-    throw new Error('No authentication token found');
+    throw new Error("No authentication token found");
   }
 
-  const socket = new WebSocket(`${WEBSOCKET_URL}/location/updates?token=${token}`);
+  const socket = new WebSocket(
+    `${WEBSOCKET_URL}/location/updates?token=${token}`
+  );
 
   socket.onopen = () => {
-    console.log('WebSocket connection established');
+    console.log("WebSocket connection established");
   };
 
-  socket.onclose = (event) => {
-    console.log('WebSocket connection closed:', event);
+  socket.onclose = event => {
+    console.log("WebSocket connection closed:", event);
   };
 
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
+  socket.onerror = error => {
+    console.error("WebSocket error:", error);
   };
 
   return socket;
@@ -47,12 +48,14 @@ export const createWebSocketConnection = (token: string | null) => {
 // Subscribe to specific buggy IDs
 export const subscribeToBuggies = (socket: WebSocket, buggyIds: number[]) => {
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'subscribe',
-      buggy_ids: buggyIds
-    }));
+    socket.send(
+      JSON.stringify({
+        type: "subscribe",
+        buggy_ids: buggyIds,
+      })
+    );
   } else {
-    console.error('WebSocket is not open. Current state:', socket.readyState);
+    console.error("WebSocket is not open. Current state:", socket.readyState);
   }
 };
 
@@ -65,30 +68,33 @@ export const sendLocationUpdate = (
   direction: number | null = null
 ) => {
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: 'location_update',
-      buggy_id: buggyId,
-      latitude,
-      longitude,
-      direction
-    }));
+    socket.send(
+      JSON.stringify({
+        type: "location_update",
+        buggy_id: buggyId,
+        latitude,
+        longitude,
+        direction,
+      })
+    );
   } else {
-    console.error('WebSocket is not open. Current state:', socket.readyState);
+    console.error("WebSocket is not open. Current state:", socket.readyState);
   }
 };
 
 // Custom hook to use WebSocket for location updates
 export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
   const [locations, setLocations] = useState<BuggyLocation[]>([]);
-  const [subscribedBuggyIds, setSubscribedBuggyIds] = useState<number[]>(initialBuggyIds);
+  const [subscribedBuggyIds, setSubscribedBuggyIds] =
+    useState<number[]>(initialBuggyIds);
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
 
     if (!token) {
-      console.error('No authentication token found');
+      console.error("No authentication token found");
       return;
     }
 
@@ -110,14 +116,14 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
         setIsConnected(false);
       };
 
-      socket.onmessage = (event) => {
+      socket.onmessage = event => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
 
-          if (message.type === 'subscription_confirmed') {
-            console.log('Subscribed to buggies:', message.buggy_ids);
+          if (message.type === "subscription_confirmed") {
+            console.log("Subscribed to buggies:", message.buggy_ids);
             setSubscribedBuggyIds(message.buggy_ids);
-          } else if (message.type === 'location_update') {
+          } else if (message.type === "location_update") {
             // Update locations with new data
             setLocations(prevLocations => {
               // Find if we already have this buggy in our locations
@@ -134,7 +140,7 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
                 driver_name: message.driver_name,
                 last_updated: message.timestamp,
                 // Derive status (customize as needed)
-                status: 'available'
+                status: "available",
               };
 
               // If we already have this buggy, update it, otherwise add it
@@ -148,16 +154,19 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
             });
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error("Error parsing WebSocket message:", error);
         }
       };
     } catch (error) {
-      console.error('Error setting up WebSocket:', error);
+      console.error("Error setting up WebSocket:", error);
     }
 
     // Cleanup function
     return () => {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      if (
+        socketRef.current &&
+        socketRef.current.readyState === WebSocket.OPEN
+      ) {
         socketRef.current.close();
       }
     };
@@ -174,6 +183,6 @@ export const useWebSocketLocations = (initialBuggyIds: number[] = []) => {
     locations,
     isConnected,
     subscribedBuggyIds,
-    subscribe
+    subscribe,
   };
 };

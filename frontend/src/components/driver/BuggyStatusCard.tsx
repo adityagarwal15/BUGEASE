@@ -1,9 +1,14 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Activity, AlertCircle } from 'lucide-react';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Activity, AlertCircle } from "lucide-react";
 
 interface BuggyDetails {
   id: number;
@@ -18,11 +23,11 @@ interface BuggyStatusCardProps {
   onStatusToggle: (checked: boolean) => void;
 }
 
-const BuggyStatusCard: React.FC<BuggyStatusCardProps> = ({ 
-  buggy, 
-  isRunning, 
-  loading, 
-  onStatusToggle 
+const BuggyStatusCard: React.FC<BuggyStatusCardProps> = ({
+  buggy,
+  isRunning,
+  loading,
+  onStatusToggle,
 }) => {
   const handleToggle = (checked: boolean) => {
     if (buggy) {
@@ -56,22 +61,19 @@ const BuggyStatusCard: React.FC<BuggyStatusCardProps> = ({
                 </Badge>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between space-x-2 border-t pt-6">
               <div>
                 <h4 className="text-sm font-medium">Broadcasting Location</h4>
                 <p className="text-xs text-muted-foreground">
-                  {isRunning 
-                    ? "Your location is visible to students" 
+                  {isRunning
+                    ? "Your location is visible to students"
                     : "Set to running to broadcast your location"}
                 </p>
               </div>
-              <Switch 
-                checked={isRunning} 
-                onCheckedChange={handleToggle} 
-              />
+              <Switch checked={isRunning} onCheckedChange={handleToggle} />
             </div>
-            
+
             {isRunning && (
               <div className="bg-green-500/10 text-green-500 p-3 rounded-md text-sm flex items-center">
                 <Activity className="h-4 w-4 mr-2 animate-pulse" />

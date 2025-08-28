@@ -1,4 +1,3 @@
-
 export interface Buggy {
   id: string;
   name: string;
@@ -95,12 +94,12 @@ export const mockRideHistory: RideRequest[] = [
     userName: "Jordan Peterson",
     pickupLocation: {
       name: "Student Union",
-      lat: 40.7128, 
+      lat: 40.7128,
       lng: -74.006,
     },
     dropoffLocation: {
       name: "Engineering Building",
-      lat: 40.7138, 
+      lat: 40.7138,
       lng: -74.009,
     },
     status: "completed",
@@ -115,12 +114,12 @@ export const mockRideHistory: RideRequest[] = [
     userName: "Jordan Peterson",
     pickupLocation: {
       name: "Library",
-      lat: 40.7118, 
+      lat: 40.7118,
       lng: -74.003,
     },
     dropoffLocation: {
       name: "Student Housing",
-      lat: 40.7148, 
+      lat: 40.7148,
       lng: -74.008,
     },
     status: "completed",
@@ -135,12 +134,12 @@ export const mockRideHistory: RideRequest[] = [
     userName: "Jordan Peterson",
     pickupLocation: {
       name: "Recreation Center",
-      lat: 40.7158, 
+      lat: 40.7158,
       lng: -74.011,
     },
     dropoffLocation: {
       name: "Student Union",
-      lat: 40.7128, 
+      lat: 40.7128,
       lng: -74.006,
     },
     status: "cancelled",
@@ -154,12 +153,12 @@ export const mockPendingRide: RideRequest = {
   userName: "Jordan Peterson",
   pickupLocation: {
     name: "Student Housing",
-    lat: 40.7148, 
+    lat: 40.7148,
     lng: -74.008,
   },
   dropoffLocation: {
     name: "Library",
-    lat: 40.7118, 
+    lat: 40.7118,
     lng: -74.003,
   },
   status: "in-progress",

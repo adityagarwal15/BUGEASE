@@ -1,14 +1,13 @@
-
-import React, { useEffect, useRef, useState } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
-import { GOOGLE_MAPS_API_KEY } from '@/config';
+import React, { useEffect, useRef, useState } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
+import { GOOGLE_MAPS_API_KEY } from "@/config";
 
 interface GoogleMapsLoaderProps {
   onMapLoad?: (map: google.maps.Map) => void;
   mapOptions?: google.maps.MapOptions;
   className?: string;
   apiKey?: string;
-  center?: {lat: number, lng: number};
+  center?: { lat: number; lng: number };
   zoom?: number;
   children?: React.ReactNode;
 }
@@ -16,11 +15,11 @@ interface GoogleMapsLoaderProps {
 const GoogleMapsLoader: React.FC<GoogleMapsLoaderProps> = ({
   onMapLoad,
   mapOptions = {},
-  className = 'w-full h-full rounded-lg',
+  className = "w-full h-full rounded-lg",
   apiKey = GOOGLE_MAPS_API_KEY,
   center,
   zoom = 14,
-  children
+  children,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -32,8 +31,8 @@ const GoogleMapsLoader: React.FC<GoogleMapsLoaderProps> = ({
       try {
         const loader = new Loader({
           apiKey,
-          version: 'weekly',
-          libraries: ['places']
+          version: "weekly",
+          libraries: ["places"],
         });
 
         await loader.load();
@@ -47,10 +46,10 @@ const GoogleMapsLoader: React.FC<GoogleMapsLoaderProps> = ({
             streetViewControl: false,
             zoomControl: true,
           };
-          
+
           const map = new google.maps.Map(mapRef.current, mapOptions);
           setMapInstance(map);
-          
+
           if (onMapLoad) {
             onMapLoad(map);
           }
@@ -68,7 +67,9 @@ const GoogleMapsLoader: React.FC<GoogleMapsLoaderProps> = ({
   const childrenWithMap = React.Children.map(children, child => {
     // Only add the map prop to valid React elements
     if (React.isValidElement(child)) {
-      return React.cloneElement(child as React.ReactElement<any>, { map: mapInstance });
+      return React.cloneElement(child as React.ReactElement<any>, {
+        map: mapInstance,
+      });
     }
     return child;
   });
