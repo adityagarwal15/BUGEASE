@@ -1,0 +1,36 @@
+name: "🚀 Pull Request"
+description: "Submit a pull request to improve the project"
+title: "[PR] <short-title>"
+labels: ["pull-request"]
+assignees: []
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "📝 Description"
+      description: "Provide a clear and concise description of the changes you have made."
+      placeholder: "Explain what this PR does..."
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: "🔗 Related Issues"
+      description: "Mention related issue numbers (e.g., Fixes #123)."
+      placeholder: "Fixes #..."
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: "📋 Changes Made"
+      description: "List the major changes introduced in this PR."
+      placeholder: "- Added...\n- Updated...\n- Fixed..."
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "✅ Checklist"
+      options:
+        - label: "I have tested my changes locally"
+        - label: "I have updated documentation if needed"
+        - label: "I agree to follow this project's Code of Conduct"
